@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  {# Fallbacks para evitar UndefinedError quando app.py não define theme/effects. #}
+  {% set theme = site.get('theme') or {} %}
+  {% set effects = site.get('effects') or {} %}
+  {% set theme_accent = theme.get('accent', '#7C5CFC') %}
+  {% set theme_accent_light = theme.get('accent_light', '#C4B5FD') %}
+  {% set theme_accent_rgb = theme.get('accent_rgb', '124,92,252') %}
+  {% set theme_background = theme.get('background', '#0A0A12') %}
+  {% set theme_surface = theme.get('surface', '#15151F') %}
+  {% set effect_particles = effects.get('particles', true) %}
+  {% set effect_cursor = effects.get('cursor', true) %}
+  {% set effect_motion = effects.get('motion', true) %}
+  {% set effect_intensity = effects.get('intensity', 82) %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="{{ theme_background }}">
+  <meta name="description" content="Portfólio de {{ site.name }} — desenvolvimento web, projetos e contato.">
+  <title>{{ site.brand_first }} {{ site.brand_last }} | Portfólio</title>
+
+  <link rel="icon" href="{{ url_for('favicon') }}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind no navegador: toda a personalização permanece neste HTML, sem arquivo .css. -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --accent: {{ theme_accent }};
+      --accent-light: {{ theme_accent_light }};
+      --accent-rgb: {{ theme_accent_rgb }};
+      --page-bg: {{ theme_background }};
+      --surface: {{ theme_surface }};
+      --motion-scale: .82;
+      --scroll-progress: 0%;
+      --cursor-x: 50vw;
+      --cursor-y: 50vh;
+    }
+    * { box-sizing: border-box; }
+    .hidden { display: none !important; }
+    html { scroll-behavior: smooth; scroll-padding-top: 100px; }
+    body { overflow-x: hidden; background: var(--page-bg); }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      opacity: .16;
+      background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 54px 54px;
+      mask-image: linear-gradient(to bottom, black, transparent 82%);
+    }
+    nav, main, footer { position: relative; z-index: 1; }
+    ::selection { background: rgba(var(--accent-rgb), .38); color: #fff; }
+    a, button, input { -webkit-tap-highlight-color: transparent; }
+    a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 4px; }
+    #scroll-progress { position: fixed; inset: 0 auto auto 0; height: 3px; width: var(--scroll-progress); z-index: 100; background: linear-gradient(90deg, var(--accent), var(--accent-light)); box-shadow: 0 0 18px rgba(var(--accent-rgb), .75); }
+    #ambient-canvas { position: fixed; inset: 0; z-index: 0; width: 100%; height: 100%; pointer-events: none; opacity: .44; }
+    .accent-text { color: var(--accent-light) !important; }
+    .accent-gradient { background: linear-gradient(110deg, var(--accent), var(--accent-light)) !important; }
+    .accent-soft { background: rgba(var(--accent-rgb), .12) !important; }
+    .accent-border { border-color: rgba(var(--accent-rgb), .44) !important; }
+    .accent-glow { box-shadow: 0 12px 34px rgba(var(--accent-rgb), .22); }
+    .hero-orb { position: absolute; border-radius: 9999px; filter: blur(2px); pointer-events: none; background: radial-gradient(circle at 35% 35%, rgba(var(--accent-rgb), .34), rgba(var(--accent-rgb), 0) 70%); animation: orb-drift 13s ease-in-out infinite alternate; }
+    .hero-orb.orb-two { animation-duration: 17s; animation-delay: -4s; }
+    @keyframes orb-drift { from { transform: translate3d(-12px,-8px,0) scale(.94); } to { transform: translate3d(18px,16px,0) scale(1.08); } }
+    @keyframes float-soft { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-11px) rotate(.5deg); } }
+    @keyframes shimmer { 0% { background-position: 180% 0; } 100% { background-position: -180% 0; } }
+    @keyframes caret-blink { 0%,48% { opacity: 1; } 49%,100% { opacity: 0; } }
+    @keyframes ripple-out { to { transform: scale(4); opacity: 0; } }
+    .floating-card { animation: float-soft 7s ease-in-out infinite; }
+    .typing-caret { display: inline-block; width: 2px; height: 1em; margin-left: 4px; vertical-align: -.12em; background: var(--accent-light); animation: caret-blink 1s steps(2, start) infinite; }
+    .tech-chip { transition: transform .35s cubic-bezier(.2,.8,.2,1), filter .35s, box-shadow .35s; }
+    .tech-chip:hover { transform: translateY(-7px) rotate(-4deg) scale(1.08); filter: saturate(1.2); box-shadow: 0 12px 26px rgba(0,0,0,.28); }
+    .project-card { position: relative; isolation: isolate; transform: perspective(1100px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateY(var(--lift, 0px)); transform-style: preserve-3d; transition: transform .42s cubic-bezier(.2,.8,.2,1), border-color .35s, box-shadow .35s; will-change: transform; }
+    .project-card::before { content: ""; position: absolute; z-index: 0; inset: 0; opacity: 0; pointer-events: none; background: radial-gradient(420px circle at var(--pointer-x, 50%) var(--pointer-y, 50%), rgba(var(--accent-rgb), .16), transparent 52%); transition: opacity .3s; }
+    .project-card:hover::before { opacity: 1; }
+    .project-card:hover { border-color: rgba(var(--accent-rgb), .48) !important; box-shadow: 0 24px 60px rgba(var(--accent-rgb), .12); }
+    .accent-gradient:hover { box-shadow: 0 14px 34px rgba(var(--accent-rgb), .28); }
+    [data-parallax] { translate: var(--parallax-x, 0px) var(--parallax-y, 0px); transition: translate .25s ease-out; }
+    .project-card > * { position: relative; z-index: 1; }
+    .project-visual { transition: transform .7s cubic-bezier(.2,.8,.2,1), filter .5s; }
+    .project-card:hover .project-visual { transform: scale(1.045); filter: saturate(1.12); }
+    .skill-fill { width: 0; transition: width 1.2s cubic-bezier(.16,1,.3,1); }
+    .magnetic { transition: transform .24s cubic-bezier(.2,.8,.2,1), box-shadow .3s, filter .3s; }
+    .magnetic:hover { filter: brightness(1.08); }
+    .section-kicker { color: var(--accent-light) !important; }
+    .nav-link { position: relative; transition: color .25s ease; }
+    .nav-link::after { content: ""; position: absolute; left: 0; right: 100%; bottom: -9px; height: 2px; border-radius: 2px; background: linear-gradient(90deg,var(--accent),var(--accent-light)); transition: right .3s cubic-bezier(.2,.8,.2,1); }
+    .nav-link:hover::after, .nav-link.is-active::after { right: 0; }
+    .nav-link.is-active { color: #fff !important; }
+    .reveal-ready [data-reveal] { opacity: 0; transform: translate3d(0, 28px, 0) scale(.985); transition: opacity calc(760ms * var(--motion-scale)) cubic-bezier(.2,.8,.2,1), transform calc(760ms * var(--motion-scale)) cubic-bezier(.2,.8,.2,1); transition-delay: var(--reveal-delay, 0ms); }
+    .reveal-ready [data-reveal="left"] { transform: translate3d(-34px, 0, 0); }
+    .reveal-ready [data-reveal="right"] { transform: translate3d(34px, 0, 0); }
+    .reveal-ready [data-reveal].is-visible { opacity: 1; transform: translate3d(0,0,0) scale(1); }
+    .motion-off *, .motion-off *::before, .motion-off *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .001ms !important; }
+    .cursor-ring, .cursor-dot { position: fixed; top: 0; left: 0; z-index: 120; pointer-events: none; opacity: 0; border-radius: 999px; transform: translate3d(-100px,-100px,0); }
+    .cursor-ring { width: 34px; height: 34px; border: 1px solid rgba(var(--accent-rgb), .75); margin: -17px 0 0 -17px; transition: width .25s,height .25s,background .25s,border-color .25s,opacity .2s; }
+    .cursor-dot { width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; background: var(--accent-light); box-shadow: 0 0 14px rgba(var(--accent-rgb), .9); }
+    body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button { cursor: none; }
+    body.has-custom-cursor .cursor-ring, body.has-custom-cursor .cursor-dot { opacity: 1; }
+    .cursor-ring.is-hover { width: 54px; height: 54px; margin: -27px 0 0 -27px; background: rgba(var(--accent-rgb), .09); border-color: var(--accent-light); }
+    .ripple { position: absolute; width: 12px; height: 12px; border-radius: 999px; pointer-events: none; background: rgba(255,255,255,.45); transform: translate(-50%,-50%); animation: ripple-out .65s ease-out forwards; }
+    #customizer-panel { opacity: 0; visibility: hidden; transform: translateY(10px) scale(.96); transform-origin: bottom right; transition: opacity .25s, transform .25s, visibility .25s; }
+    #customizer-panel[hidden] { display: none; }
+    #customizer-panel.is-open { opacity: 1; transform: translateY(0) scale(1); visibility: visible; }
+    .theme-swatch { width: 28px; height: 28px; border: 2px solid rgba(255,255,255,.2); border-radius: 999px; transition: transform .2s,border-color .2s; }
+    .theme-swatch[aria-pressed="true"] { transform: scale(1.14); border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.12); }
+    #back-to-top { opacity: 0; visibility: hidden; transform: translateY(10px); transition: opacity .25s,transform .25s,visibility .25s; }
+    #back-to-top.is-visible { opacity: 1; visibility: visible; transform: translateY(0); }
+    @media (hover: none), (pointer: coarse) { .project-card { transform: none !important; } }
+    @media (max-width: 767px) { #ambient-canvas { opacity: .22; } .hero-orb { filter: blur(18px); } }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+      #ambient-canvas, .cursor-ring, .cursor-dot { display: none !important; }
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-[#0A0A12] font-sans text-[#F3F3F8] antialiased selection:bg-violet-400/30 selection:text-white" style="font-family:'Inter',sans-serif; --accent: {{ theme_accent }}; --accent-light: {{ theme_accent_light }}; --accent-rgb: {{ theme_accent_rgb }}; --page-bg: {{ theme_background }}; --surface: {{ theme_surface }}">
+  <div id="scroll-progress" aria-hidden="true"></div>
+  <canvas id="ambient-canvas" aria-hidden="true"></canvas>
+  <div class="cursor-ring" id="cursor-ring" aria-hidden="true"></div><div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
+  <a href="#top" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[150] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-black">Pular para o conteúdo</a>
+  <!-- Navegação -->
+  <nav id="site-nav" class="sticky top-0 z-50 border-b border-[#262635] bg-[#0A0A12]/80 backdrop-blur-xl transition-all duration-300">
+    <div class="mx-auto flex h-20 max-w-6xl items-center justify-between px-5 sm:px-6 lg:px-8">
+      <a href="#top" class="flex items-center gap-3 font-bold tracking-tight" aria-label="Voltar ao início">
+        <span class="flex h-9 w-9 items-center justify-center rounded-xl accent-gradient text-white">
+          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16" />
+          </svg>
+        </span>
+        <span class="text-lg" style="font-family:'Space Grotesk',sans-serif">
+          {{ site.brand_first }} <span class="accent-text">{{ site.brand_last }}</span>
+        </span>
+      </a>
+
+      <div class="hidden items-center gap-7 text-sm font-medium md:flex">
+        <a class="nav-link text-[#9796AC] transition hover:text-white" data-nav-link href="#top">Início</a>
+        <a class="nav-link text-[#9796AC] transition hover:text-white" data-nav-link href="#sobre">Sobre</a>
+        <a class="nav-link text-[#9796AC] transition hover:text-white" data-nav-link href="#habilidades">Habilidades</a>
+        <a class="nav-link text-[#9796AC] transition hover:text-white" data-nav-link href="#projetos">Projetos</a>
+        <a class="nav-link text-[#9796AC] transition hover:text-white" data-nav-link href="#contato">Contato</a>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="#contato" class="magnetic hidden items-center gap-2 rounded-full accent-gradient px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-violet-500/20 sm:inline-flex">
+          Contrate-me
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M7 17 17 7M7 7h10v10" />
+          </svg>
+        </a>
+
+        <button
+          id="menu-toggle"
+          type="button"
+          aria-label="Abrir menu"
+          aria-controls="mobile-menu"
+          aria-expanded="false"
+          class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#262635] text-white md:hidden"
+        >
+          <svg id="menu-open-icon" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+          <svg id="menu-close-icon" viewBox="0 0 24 24" class="hidden h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="hidden border-t border-[#262635] bg-[#101018] px-5 py-5 md:hidden">
+      <div class="mx-auto flex max-w-6xl flex-col gap-4 text-sm font-medium">
+        <a class="text-[#9796AC] hover:text-white" href="#top">Início</a>
+        <a class="text-[#9796AC] hover:text-white" href="#sobre">Sobre</a>
+        <a class="text-[#9796AC] hover:text-white" href="#habilidades">Habilidades</a>
+        <a class="text-[#9796AC] hover:text-white" href="#projetos">Projetos</a>
+        <a class="text-[#9796AC] hover:text-white" href="#contato">Contato</a>
+        <a href="#contato" class="magnetic mt-1 inline-flex w-fit rounded-full accent-gradient px-5 py-3 font-semibold text-white">Contrate-me</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Apresentação -->
+    <header id="top" class="relative mx-auto grid max-w-6xl items-center gap-12 overflow-hidden px-5 py-16 sm:px-6 md:py-20 lg:grid-cols-2 lg:px-8">
+      <div class="hero-orb -left-32 top-4 h-72 w-72" aria-hidden="true"></div><div class="hero-orb orb-two right-0 top-24 h-96 w-96" aria-hidden="true"></div>
+      <div class="relative z-10" data-reveal="left">
+        <span class="inline-flex rounded-full border accent-border accent-soft px-4 py-2 text-xs font-bold tracking-wider accent-text">
+          {{ site.role_badge }}
+        </span>
+
+        <h1 class="mt-5 text-4xl font-bold leading-tight tracking-tight sm:text-5xl" style="font-family:'Space Grotesk',sans-serif">
+          Transformando ideias em paginas profissionais <span class="accent-text">{{ site.name }}</span>
+        </h1>
+        <h2 class="mt-3 text-2xl font-semibold leading-tight sm:text-3xl" style="font-family:'Space Grotesk',sans-serif">
+          <span id="typed-headline" data-default="{{ site.headline }}">{{ site.headline }}</span><span class="typing-caret" aria-hidden="true"></span>
+        </h2>
+        <p class="mt-4 mb-7 max-w-lg text-base leading-relaxed text-[#9796AC]">
+          {{ site.intro }}
+        </p>
+
+        <div class="mb-9 flex flex-wrap gap-3">
+          <a href="#projetos" class="magnetic inline-flex items-center gap-2 rounded-full accent-gradient px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-950/20 transition hover:shadow-violet-500/20">
+            Ver meu trabalho
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M7 17 17 7M7 7h10v10" />
+            </svg>
+          </a>
+
+          {% if site.resume_url %}
+          <a href="{{ site.resume_url }}" download class="inline-flex items-center gap-2 rounded-full border border-[#262635] px-6 py-3.5 text-sm font-semibold text-white transition hover:border-violet-400/50 hover:bg-white/5">
+            Baixar currículo
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v4h14v-4" />
+            </svg>
+          </a>
+          {% else %}
+          <a href="#contato" title="Entre em contato para solicitar o currículo" class="inline-flex items-center gap-2 rounded-full border border-[#262635] px-6 py-3.5 text-sm font-semibold text-white transition hover:border-violet-400/50 hover:bg-white/5">
+            Solicitar currículo
+          </a>
+          {% endif %}
+        </div>
+
+        <p class="mb-3 text-xs font-bold tracking-wider text-[#9796AC]">TECNOLOGIAS QUE UTILIZO</p>
+        <div class="flex flex-wrap gap-2.5" aria-label="Tecnologias">
+          <span title="HTML5" class="tech-chip flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold text-[#0A0A12]" style="background:#E8703A">H5</span>
+          <span title="CSS3" class="tech-chip flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold text-[#0A0A12]" style="background:#4C9BE0">C3</span>
+          <span title="JavaScript" class="tech-chip flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold text-[#0A0A12]" style="background:#F0CB3A">JS</span>
+          <span title="TypeScript" class="tech-chip flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold text-[#0A0A12]" style="background:#4C7FDB">TS</span>
+          <span title="React" class="tech-chip flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold text-[#0A0A12]" style="background:#56D2E0">RX</span>
+          <span title="Node.js" class="tech-chip flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold text-[#0A0A12]" style="background:#4CAE5A">ND</span>
+          <span title="Git" class="tech-chip flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold text-[#0A0A12]" style="background:#E15A3E">GT</span>
+        </div>
+      </div>
+
+      <div class="relative mx-auto hidden h-[400px] w-full max-w-lg md:block" data-reveal="right" data-parallax>
+        <div class="absolute inset-8 rounded-full accent-soft blur-3xl"></div>
+        <div class="floating-card absolute inset-x-12 inset-y-10 flex flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-[#262635] bg-[#15151F]/80 p-5">
+          {% if site.photo_url %}
+          <img src="{{ site.photo_url }}" alt="Foto de {{ site.name }}" class="h-64 w-64 rounded-2xl object-cover shadow-2xl shadow-black/40">
+          {% else %}
+          <svg viewBox="0 0 24 24" class="h-12 w-12 text-[#9796AC]" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path stroke-linejoin="round" d="M4 7a2 2 0 0 1 2-2h3l2-2h2l2 2h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Z" />
+            <circle cx="12" cy="13" r="3.2" />
+          </svg>
+          <span class="text-sm text-[#9796AC]">Adicione sua foto em app.py</span>
+          {% endif %}
+        </div>
+
+        <div class="absolute top-2 right-0 w-48 rounded-2xl border border-[#262635] bg-[#15151F] p-4 shadow-2xl shadow-black/50">
+          <div class="mb-2 flex items-center justify-between">
+            <span class="flex items-center gap-2 text-xs text-[#9796AC]">
+              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16" />
+              </svg>
+              Code
+            </span>
+            <span class="h-2 w-2 rounded-full bg-green-400"></span>
+          </div>
+          <div class="font-mono text-xs leading-6 text-[#9796AC]">
+            <div><span class="accent-text">const</span> dev = {</div>
+            <div class="pl-3">nome: <span class="text-emerald-300">"{{ site.name }}"</span>,</div>
+            <div class="pl-3">skills: [<span class="text-emerald-300">"HTML"</span>, <span class="text-emerald-300">"JS"</span>],</div>
+            <div class="pl-3">foco: <span class="text-emerald-300">"soluções web"</span></div>
+            <div>};</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sobre -->
+    <section id="sobre" class="border-y border-[#262635] bg-[#101018]/90 py-20 md:py-24">
+      <div class="mx-auto grid max-w-6xl items-center gap-12 px-5 sm:px-6 md:grid-cols-2 lg:px-8">
+        <div data-reveal="left">
+          <span class="mb-3 block text-xs font-bold tracking-widest accent-text">SOBRE MIM</span>
+          <h2 class="mb-4 text-3xl font-bold leading-tight" style="font-family:'Space Grotesk',sans-serif">{{ site.about_title }}</h2>
+          <p class="mb-6 max-w-xl text-base leading-relaxed text-[#9796AC]">{{ site.about_text }}</p>
+          <a href="#projetos" class="inline-flex items-center gap-2 rounded-full border border-[#262635] px-6 py-3.5 text-sm font-semibold transition hover:border-violet-400/50 hover:bg-white/5">
+            {{ site.about_link_text }}
+          </a>
+        </div>
+
+        <div class="grid grid-cols-1 gap-7 sm:grid-cols-2" data-reveal="right">
+          {% for stat in site.stats %}
+          <div class="flex items-center gap-4">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl accent-soft accent-text">
+              {% if stat.icon == 'calendar' %}
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+              {% elif stat.icon == 'code' %}
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16"/></svg>
+              {% elif stat.icon == 'smile' %}
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>
+              {% else %}
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg>
+              {% endif %}
+            </div>
+            <div>
+              <div class="text-2xl font-bold" data-counter style="font-family:'Space Grotesk',sans-serif">{{ stat.value }}</div>
+              <div class="text-sm text-[#9796AC]">{{ stat.label }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- Habilidades -->
+    <section id="habilidades" class="py-20 md:py-24">
+      <div class="mx-auto max-w-6xl px-5 sm:px-6 lg:px-8">
+        <div class="mx-auto mb-12 max-w-2xl text-center" data-reveal="up">
+          <span class="mb-3 block text-xs font-bold tracking-widest accent-text">MINHAS HABILIDADES</span>
+          <h2 class="text-3xl font-bold" style="font-family:'Space Grotesk',sans-serif">Tecnologias que domino</h2>
+        </div>
+
+        <div class="grid grid-cols-1 gap-8 md:grid-cols-3" data-reveal="up">
+          {% for group in site.skills %}
+          <div class="flex flex-col gap-7">
+            {% for skill in group %}
+            <div>
+              <div class="flex items-center justify-between gap-3 text-sm font-semibold">
+                <span class="flex items-center">
+                  <span class="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-bold text-[#0A0A12]" style="background-color:{{ skill.color }}">{{ skill.short }}</span>
+                  {{ skill.name }}
+                </span>
+                <span class="shrink-0 text-[#9796AC]">{{ skill.level }}%</span>
+              </div>
+              <div class="mt-2 h-2 overflow-hidden rounded-full bg-[#262635]" data-skill-track>
+                <div class="h-full rounded-full accent-gradient" style="width:{{ skill.level }}%"></div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- Projetos -->
+    <section id="projetos" class="bg-[#101018] py-20 md:py-24">
+      <div class="mx-auto max-w-6xl px-5 sm:px-6 lg:px-8">
+        <div class="mx-auto mb-12 max-w-2xl text-center" data-reveal="up">
+          <span class="mb-3 block text-xs font-bold tracking-widest accent-text">PROJETOS EM DESTAQUE</span>
+          <h2 class="text-3xl font-bold" style="font-family:'Space Grotesk',sans-serif">Alguns dos meus trabalhos recentes</h2>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" data-reveal="up">
+          {% for project in site.projects %}
+          <article data-tilt class="project-card overflow-hidden rounded-2xl border border-[#262635] bg-[#15151F] transition duration-300 hover:border-violet-400/40 hover:shadow-xl hover:shadow-black/20">
+            <div class="project-visual relative h-44 overflow-hidden" style="background:{{ project.gradient }}">
+              <span class="absolute top-3 left-3 rounded-full bg-[#0A0A12]/60 px-3 py-1 text-xs font-bold text-white">{{ project.number }}</span>
+              {% if project.kind == 'store' %}
+              <div class="absolute inset-9 rounded-xl bg-white/15"></div>
+              <div class="absolute top-12 left-12 h-4 w-20 rounded-md bg-white/40"></div>
+              <div class="absolute right-14 bottom-10 left-14 h-7 rounded-lg bg-white/15"></div>
+              {% elif project.kind == 'tasks' %}
+              <div class="absolute top-10 right-7 left-7 h-4 rounded-md bg-violet-400/35"></div>
+              <div class="absolute top-16 right-16 left-7 h-4 rounded-md bg-violet-400/20"></div>
+              <div class="absolute top-24 right-20 left-7 h-4 rounded-md bg-violet-400/20"></div>
+              {% else %}
+              <svg viewBox="0 0 220 70" class="absolute right-6 bottom-7 left-6 h-[70px] w-[calc(100%-3rem)]" fill="none" aria-hidden="true">
+                <polyline points="0,55 30,42 60,48 90,22 120,30 150,10 180,18 220,2" stroke="#A78BFA" stroke-width="2.5" />
+              </svg>
+              {% endif %}
+            </div>
+
+            <div class="p-6">
+              <h3 class="mb-2 text-lg font-bold" style="font-family:'Space Grotesk',sans-serif">{{ project.name }}</h3>
+              <p class="mb-4 text-sm leading-relaxed text-[#9796AC]">{{ project.description }}</p>
+              {% if project.url and project.url != '#' %}
+              <a href="{{ project.url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-sm font-semibold accent-text transition hover:text-violet-300">
+                Ver projeto
+                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>
+              </a>
+              {% else %}
+              <span class="text-sm font-semibold text-[#9796AC]">Projeto em breve</span>
+              {% endif %}
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- Contato -->
+    <section id="contato" class="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-5 py-20 sm:px-6 md:py-24 lg:grid-cols-3 lg:px-8">
+      <div>
+        <span class="mb-3 block text-xs font-bold tracking-widest accent-text">VAMOS TRABALHAR JUNTOS</span>
+        <h2 class="mb-4 text-3xl font-bold leading-tight" style="font-family:'Space Grotesk',sans-serif">{{ site.contact_title }}</h2>
+        <p class="mb-6 text-sm leading-relaxed text-[#9796AC]">{{ site.contact_text }}</p>
+        <a href="mailto:{{ site.email }}" class="magnetic inline-flex items-center gap-2 rounded-full accent-gradient px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-violet-500/20">
+          Entrar em contato
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>
+        </a>
+      </div>
+
+      <div data-reveal="up" class="rounded-2xl border border-[#262635] bg-[#15151F] p-6">
+        <div class="mb-2 text-3xl accent-text" style="font-family:'Space Grotesk',sans-serif">“</div>
+        <p class="mb-6 text-sm italic leading-relaxed">{{ site.testimonial }}</p>
+        <div class="flex items-center gap-3">
+          <span class="h-10 w-10 shrink-0 rounded-full bg-[#2A2A3D]" aria-hidden="true"></span>
+          <div>
+            <div class="text-sm font-semibold">{{ site.testimonial_author }}</div>
+            <div class="text-xs text-[#9796AC]">{{ site.testimonial_project }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <span class="mb-3 block text-xs font-bold tracking-widest accent-text">REDES SOCIAIS</span>
+        <div class="mb-5 flex flex-wrap gap-2.5">
+          {% for social in site.socials %}
+          {% if social.url and social.url != '#' %}
+          <a aria-label="{{ social.name }}" href="{{ social.url }}" target="_blank" rel="noopener noreferrer" class="flex h-10 w-10 items-center justify-center rounded-xl border border-[#262635] bg-[#15151F] text-xs font-bold text-[#9796AC] transition hover:border-violet-400/50 hover:accent-text">{{ social.label }}</a>
+          {% else %}
+          <span aria-label="{{ social.name }}" title="Adicione o link de {{ social.name }} no app.py" class="flex h-10 w-10 items-center justify-center rounded-xl border border-[#262635] bg-[#15151F] text-xs font-bold text-[#9796AC]">{{ social.label }}</span>
+          {% endif %}
+          {% endfor %}
+        </div>
+
+        <a href="mailto:{{ site.email }}" class="mb-3 flex items-center gap-3 break-all text-sm text-[#9796AC] transition hover:text-white">
+          <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          {{ site.email }}
+        </a>
+
+        {% if site.phone_display %}
+        {% if site.phone_link %}
+        <a href="tel:{{ site.phone_link }}" class="flex items-center gap-3 text-sm text-[#9796AC] transition hover:text-white">
+        {% else %}
+        <span class="flex items-center gap-3 text-sm text-[#9796AC]">
+        {% endif %}
+          <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 11.2 18a19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.2 3.2 2 2 0 0 1 4.2 1h3a2 2 0 0 1 2 1.7l.5 2.7a2 2 0 0 1-.6 1.8L7.8 8.5a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 1.8-.6l2.7.5a2 2 0 0 1 1.7 1.8Z"/></svg>
+          {{ site.phone_display }}
+        {% if site.phone_link %}
+        </a>
+        {% else %}
+        </span>
+        {% endif %}
+        {% endif %}
+      </div>
+    </section>
+  </main>
+
+  <!-- Painel de personalização visual: preferências salvas no navegador. -->
+  <div class="fixed bottom-5 right-5 z-[90] flex flex-col items-end gap-3">
+    <div id="customizer-panel" hidden class="w-[min(19rem,calc(100vw-2.5rem))] rounded-2xl border border-white/10 bg-[#14141F]/95 p-5 opacity-0 shadow-2xl shadow-black/50 backdrop-blur-2xl" role="dialog" aria-label="Personalizar aparência" aria-modal="false">
+      <div class="mb-4 flex items-center justify-between">
+        <div><p class="text-sm font-bold text-white">Personalizar experiência</p><p class="mt-1 text-[11px] text-[#9796AC]">As escolhas ficam salvas neste navegador.</p></div>
+        <button id="customizer-close" class="rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-[#9796AC] hover:text-white" type="button" aria-label="Fechar painel">✕</button>
+      </div>
+      <div class="mb-4">
+        <p class="mb-2 text-xs font-semibold text-[#D5D4E2]">Cor de destaque</p>
+        <div class="flex items-center gap-3">
+          <button class="theme-swatch" type="button" data-theme-preset="violet" aria-label="Tema violeta" aria-pressed="true" style="background:linear-gradient(135deg,#7C5CFC,#C4B5FD)"></button>
+          <button class="theme-swatch" type="button" data-theme-preset="cyan" aria-label="Tema ciano" aria-pressed="false" style="background:linear-gradient(135deg,#0891B2,#67E8F9)"></button>
+          <button class="theme-swatch" type="button" data-theme-preset="emerald" aria-label="Tema esmeralda" aria-pressed="false" style="background:linear-gradient(135deg,#059669,#6EE7B7)"></button>
+          <button class="theme-swatch" type="button" data-theme-preset="rose" aria-label="Tema rosa" aria-pressed="false" style="background:linear-gradient(135deg,#E11D48,#FDA4AF)"></button>
+          <button class="theme-swatch" type="button" data-theme-preset="amber" aria-label="Tema âmbar" aria-pressed="false" style="background:linear-gradient(135deg,#D97706,#FCD34D)"></button>
+        </div>
+        <div class="mt-3 flex items-center justify-between gap-3">
+          <label for="accent-picker" class="text-xs text-[#9796AC]">Cor personalizada</label>
+          <input id="accent-picker" type="color" value="{{ theme_accent }}" aria-label="Escolher cor personalizada" class="h-8 w-12 cursor-pointer rounded-lg border border-white/10 bg-transparent p-0.5">
+        </div>
+      </div>
+      <div class="mb-4">
+        <div class="mb-2 flex items-center justify-between"><label for="motion-intensity" class="text-xs font-semibold text-[#D5D4E2]">Intensidade das animações</label><output id="motion-output" class="text-xs accent-text">82%</output></div>
+        <input id="motion-intensity" class="w-full accent-violet-400" type="range" min="0" max="120" step="1" value="82">
+      </div>
+      <div class="space-y-2.5 border-t border-white/10 pt-3">
+        <label class="flex items-center justify-between gap-3 text-xs text-[#D5D4E2]"><span>Partículas de fundo</span><input id="toggle-particles" type="checkbox" class="h-4 w-4 accent-violet-400" checked></label>
+        <label class="flex items-center justify-between gap-3 text-xs text-[#D5D4E2]"><span>Cursor interativo</span><input id="toggle-cursor" type="checkbox" class="h-4 w-4 accent-violet-400" checked></label>
+        <label class="flex items-center justify-between gap-3 text-xs text-[#D5D4E2]"><span>Movimento dos elementos</span><input id="toggle-motion" type="checkbox" class="h-4 w-4 accent-violet-400" checked></label>
+      </div>
+      <button id="customizer-reset" type="button" class="mt-4 w-full rounded-xl border border-white/10 px-3 py-2.5 text-xs font-semibold text-[#B7B6C8] transition hover:border-white/25 hover:text-white">Restaurar padrão</button>
+    </div>
+    <button id="customizer-toggle" type="button" aria-controls="customizer-panel" aria-expanded="false" class="magnetic accent-gradient accent-glow flex items-center gap-2 rounded-full px-4 py-3 text-xs font-bold text-white shadow-xl">
+      <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.64 5.64l1.42 1.42m9.88 9.88 1.42 1.42m0-12.72-1.42 1.42m-9.88 9.88-1.42 1.42"/><circle cx="12" cy="12" r="4"/></svg>
+      Personalizar
+    </button>
+  </div>
+  <button id="back-to-top" type="button" aria-label="Voltar ao topo" class="fixed bottom-6 left-5 z-[80] flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-[#171722]/90 text-white shadow-xl backdrop-blur-xl transition hover:bg-white/10">
+    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg>
+  </button>
+
+  <footer class="border-t border-[#262635] py-6">
+    <div class="mx-auto flex max-w-6xl flex-wrap justify-between gap-3 px-5 text-xs text-[#9796AC] sm:px-6 lg:px-8">
+      <span>© {{ year }} {{ site.name }}. Todos os direitos reservados.</span>
+      <span>{{ site.footer_note }}</span>
+    </div>
+  </footer>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const $ = (selector, scope = document) => scope.querySelector(selector);
+      const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const finePointer = window.matchMedia('(pointer: fine)').matches;
+      const touchDevice = !finePointer;
+      const storageKey = 'module-code-portfolio-preferences-v2';
+      const serverDefaults = {
+        particles: {{ effect_particles | tojson }},
+        cursor: {{ effect_cursor | tojson }},
+        motion: {{ effect_motion | tojson }},
+        intensity: {{ effect_intensity | tojson }},
+        theme: 'custom'
+      };
+      const serverTheme = {
+        accent: {{ theme_accent | tojson }},
+        light: {{ theme_accent_light | tojson }},
+        rgb: {{ theme_accent_rgb | tojson }}
+      };
+      const themes = {
+        violet: { accent: '#7C5CFC', light: '#C4B5FD', rgb: '124,92,252' },
+        cyan: { accent: '#0891B2', light: '#67E8F9', rgb: '8,145,178' },
+        emerald: { accent: '#059669', light: '#6EE7B7', rgb: '5,150,105' },
+        rose: { accent: '#E11D48', light: '#FDA4AF', rgb: '225,29,72' },
+        amber: { accent: '#D97706', light: '#FCD34D', rgb: '217,119,6' }
+      };
+      let preferences = { ...serverDefaults };
+      const motionIsActive = () => Boolean(preferences.motion) && Number(preferences.intensity) > 0 && !reducedMotion;
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+        if (saved && typeof saved === 'object') preferences = { ...preferences, ...saved };
+      } catch (error) {
+        console.warn('Não foi possível recuperar as preferências visuais.', error);
+      }
+      if (reducedMotion) preferences.motion = false;
+      if (touchDevice) preferences.cursor = false;
+
+      const savePreferences = () => {
+        try { localStorage.setItem(storageKey, JSON.stringify(preferences)); }
+        catch (error) { console.warn('Preferências não puderam ser salvas.', error); }
+      };
+
+      function hexToTheme(hex) {
+        const clean = String(hex || '').replace('#', '');
+        if (!/^[0-9a-f]{6}$/i.test(clean)) return null;
+        const r = parseInt(clean.slice(0, 2), 16), g = parseInt(clean.slice(2, 4), 16), b = parseInt(clean.slice(4, 6), 16);
+        const lighten = (value) => Math.round(value + (255 - value) * .48);
+        return { accent: `#${clean}`, light: `rgb(${lighten(r)},${lighten(g)},${lighten(b)})`, rgb: `${r},${g},${b}` };
+      }
+      function applyTheme(name) {
+        const root = document.documentElement;
+        let theme = themes[name];
+        if (name === 'custom-color') theme = hexToTheme(preferences.customAccent) || serverTheme;
+        if (name === 'custom' || !name) theme = serverTheme;
+        preferences.theme = themes[name] || name === 'custom-color' ? name : 'custom';
+        if (theme) {
+          root.style.setProperty('--accent', theme.accent);
+          root.style.setProperty('--accent-light', theme.light);
+          root.style.setProperty('--accent-rgb', theme.rgb);
+          const picker = $('#accent-picker');
+          if (picker && /^#[0-9a-f]{6}$/i.test(theme.accent)) picker.value = theme.accent;
+        }
+        $$('[data-theme-preset]').forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.themePreset === preferences.theme));
+        });
+        savePreferences();
+      }
+
+      function applyPreferences() {
+        const root = document.documentElement;
+        const intensity = Math.max(0, Math.min(120, Number(preferences.intensity) || 0));
+        root.style.setProperty('--motion-scale', String(intensity / 100));
+        document.body.classList.toggle('motion-off', !motionIsActive());
+        document.body.classList.toggle('has-custom-cursor', Boolean(preferences.cursor) && finePointer && motionIsActive());
+        window.__syncPortfolioCursor?.();
+        if (!motionIsActive()) {
+          document.documentElement.classList.remove('reveal-ready');
+          $$('[data-reveal]').forEach((element) => element.classList.add('is-visible'));
+        }
+        $('#motion-intensity').value = String(intensity);
+        $('#motion-output').textContent = `${intensity}%`;
+        $('#toggle-particles').checked = Boolean(preferences.particles);
+        $('#toggle-cursor').checked = Boolean(preferences.cursor) && finePointer;
+        $('#toggle-motion').checked = Boolean(preferences.motion) && !reducedMotion;
+        applyTheme(preferences.theme);
+        resizeCanvas();
+      }
+
+      // Painel de personalização com persistência local.
+      const customizer = $('#customizer-panel');
+      const customizerToggle = $('#customizer-toggle');
+      const setCustomizerOpen = (open) => {
+        if (!customizer || !customizerToggle) return;
+        customizer.hidden = !open;
+        requestAnimationFrame(() => customizer.classList.toggle('is-open', open));
+        customizerToggle.setAttribute('aria-expanded', String(open));
+      };
+      customizerToggle?.addEventListener('click', () => setCustomizerOpen(customizer.hidden));
+      $('#customizer-close')?.addEventListener('click', () => setCustomizerOpen(false));
+      document.addEventListener('keydown', (event) => { if (event.key === 'Escape') setCustomizerOpen(false); });
+      $$('[data-theme-preset]').forEach((button) => button.addEventListener('click', () => applyTheme(button.dataset.themePreset)));
+      $('#accent-picker')?.addEventListener('input', (event) => { preferences.customAccent = event.target.value; applyTheme('custom-color'); });
+      $('#motion-intensity')?.addEventListener('input', (event) => {
+        preferences.intensity = Number(event.target.value);
+        document.documentElement.style.setProperty('--motion-scale', String(preferences.intensity / 100));
+        document.body.classList.toggle('motion-off', !motionIsActive());
+        if (!motionIsActive()) {
+          document.documentElement.classList.remove('reveal-ready');
+          $$('[data-reveal]').forEach((element) => element.classList.add('is-visible'));
+        }
+        $('#motion-output').textContent = `${preferences.intensity}%`;
+        window.__syncPortfolioCursor?.();
+        resizeCanvas();
+        savePreferences();
+      });
+      $('#toggle-particles')?.addEventListener('change', (event) => { preferences.particles = event.target.checked; savePreferences(); resizeCanvas(); });
+      $('#toggle-cursor')?.addEventListener('change', (event) => { preferences.cursor = event.target.checked && finePointer; applyPreferences(); savePreferences(); });
+      $('#toggle-motion')?.addEventListener('change', (event) => { preferences.motion = event.target.checked && !reducedMotion; applyPreferences(); savePreferences(); });
+      $('#customizer-reset')?.addEventListener('click', () => { preferences = { ...serverDefaults, theme: 'custom' }; applyPreferences(); savePreferences(); });
+
+      // Indicador de progresso, navbar compacta e botão de voltar ao topo.
+      const progress = $('#scroll-progress');
+      const nav = $('#site-nav');
+      const backToTop = $('#back-to-top');
+      let scrollTicking = false;
+      const updateScrollUI = () => {
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        const percent = maxScroll > 0 ? (window.scrollY / maxScroll) * 100 : 0;
+        document.documentElement.style.setProperty('--scroll-progress', `${percent}%`);
+        nav?.classList.toggle('shadow-lg', window.scrollY > 16);
+        nav?.classList.toggle('border-white/10', window.scrollY > 16);
+        backToTop?.classList.toggle('is-visible', window.scrollY > 500);
+        scrollTicking = false;
+      };
+      window.addEventListener('scroll', () => {
+        if (!scrollTicking) { window.requestAnimationFrame(updateScrollUI); scrollTicking = true; }
+      }, { passive: true });
+      updateScrollUI();
+      backToTop?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' }));
+
+      // Menu mobile com fechamento por link, Escape e mudança de viewport.
+      const menuToggle = $('#menu-toggle');
+      const menu = $('#mobile-menu');
+      const openIcon = $('#menu-open-icon');
+      const closeIcon = $('#menu-close-icon');
+      const setMenuOpen = (isOpen) => {
+        if (!menuToggle || !menu || !openIcon || !closeIcon) return;
+        menuToggle.setAttribute('aria-expanded', String(isOpen));
+        menuToggle.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
+        menu.classList.toggle('hidden', !isOpen);
+        openIcon.classList.toggle('hidden', isOpen);
+        closeIcon.classList.toggle('hidden', !isOpen);
+      };
+      menuToggle?.addEventListener('click', () => setMenuOpen(menuToggle.getAttribute('aria-expanded') !== 'true'));
+      $$('#mobile-menu a').forEach((link) => link.addEventListener('click', () => setMenuOpen(false)));
+      window.addEventListener('resize', () => { if (window.innerWidth >= 768) setMenuOpen(false); });
+
+      // Revelação progressiva de blocos e elementos conforme entram na tela.
+      const revealTargets = [
+        ...$$('main header > div:not(.hero-orb)'), ...$$('#sobre [data-reveal], #sobre .grid > div'),
+        ...$$('#habilidades .max-w-2xl, #habilidades [data-reveal], #habilidades .grid > div'),
+        ...$$('#projetos .max-w-2xl, #projetos article'), ...$$('#contato > div'),
+      ];
+      const uniqueRevealTargets = [...new Set(revealTargets)];
+      uniqueRevealTargets.forEach((element, index) => {
+        if (!element.hasAttribute('data-reveal')) element.setAttribute('data-reveal', 'up');
+        element.style.setProperty('--reveal-delay', `${(index % 4) * 85}ms`);
+      });
+      if (motionIsActive() && 'IntersectionObserver' in window) {
+        document.documentElement.classList.add('reveal-ready');
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); }
+          });
+        }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+        uniqueRevealTargets.forEach((element) => revealObserver.observe(element));
+      } else {
+        uniqueRevealTargets.forEach((element) => element.classList.add('is-visible'));
+      }
+
+      // Barras de habilidade com preenchimento animado e números crescentes nas métricas.
+      const skillObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const level = Math.max(0, Math.min(100, Number(entry.target.dataset.skillLevel) || 0));
+          entry.target.style.width = `${level}%`;
+          observer.unobserve(entry.target);
+        });
+      }, { threshold: .35 });
+      $$('[data-skill-level]').forEach((bar) => skillObserver.observe(bar));
+
+      const counterObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const element = entry.target;
+          const original = element.textContent.trim();
+          const match = original.match(/^([\d.,]+)(.*)$/);
+          if (!match || !motionIsActive()) { observer.unobserve(element); return; }
+          const target = Number(match[1].replace(',', '.'));
+          if (!Number.isFinite(target)) { observer.unobserve(element); return; }
+          const suffix = match[2];
+          const duration = 1250 * (Math.max(.4, Number(preferences.intensity) / 82));
+          const start = performance.now();
+          const step = (now) => {
+            const progress = Math.min(1, (now - start) / duration);
+            const eased = 1 - Math.pow(1 - progress, 4);
+            const value = target * eased;
+            element.textContent = `${Number.isInteger(target) ? Math.round(value) : value.toFixed(1)}${suffix}`;
+            if (progress < 1) requestAnimationFrame(step); else element.textContent = original;
+          };
+          requestAnimationFrame(step);
+          observer.unobserve(element);
+        });
+      }, { threshold: .6 });
+      $$('[data-counter]').forEach((counter) => counterObserver.observe(counter));
+
+      // Alternância de frases no título principal (typewriter).
+      const typed = $('#typed-headline');
+      const phrases = {{ site.roles | tojson }};
+      if (typed && Array.isArray(phrases) && phrases.length && motionIsActive()) {
+        let phraseIndex = 0;
+        let charIndex = typed.dataset.default.length;
+        let deleting = false;
+        const typeLoop = () => {
+          const current = phrases[phraseIndex] || typed.dataset.default;
+          if (!deleting) {
+            charIndex = Math.min(current.length, charIndex + 1);
+            typed.textContent = current.slice(0, charIndex);
+            if (charIndex === current.length) { deleting = true; window.setTimeout(typeLoop, 1850); return; }
+          } else {
+            charIndex = Math.max(0, charIndex - 1);
+            typed.textContent = current.slice(0, charIndex);
+            if (charIndex === 0) { deleting = false; phraseIndex = (phraseIndex + 1) % phrases.length; }
+          }
+          if (!motionIsActive()) { typed.textContent = typed.dataset.default; return; }
+          window.setTimeout(typeLoop, deleting ? 28 : 48);
+        };
+        // Mantém o texto completo até a primeira pausa e inicia sem salto.
+        window.setTimeout(() => { phraseIndex = 0; deleting = true; typeLoop(); }, 2400);
+      }
+
+      // Efeito de inclinação 3D e foco luminoso nos cards de projeto.
+      if (finePointer) {
+        $$('[data-tilt]').forEach((card) => {
+          card.addEventListener('pointermove', (event) => {
+            if (!motionIsActive()) return;
+            const rect = card.getBoundingClientRect();
+            const x = (event.clientX - rect.left) / rect.width;
+            const y = (event.clientY - rect.top) / rect.height;
+            const tiltStrength = Math.max(0, Number(preferences.intensity) || 0) / 82;
+            const rotateY = (x - .5) * 9 * tiltStrength;
+            const rotateX = (.5 - y) * 9 * tiltStrength;
+            card.style.setProperty('--tilt-x', `${rotateX.toFixed(2)}deg`);
+            card.style.setProperty('--tilt-y', `${rotateY.toFixed(2)}deg`);
+            card.style.setProperty('--lift', '-5px');
+            card.style.setProperty('--pointer-x', `${x * 100}%`);
+            card.style.setProperty('--pointer-y', `${y * 100}%`);
+          });
+          card.addEventListener('pointerleave', () => {
+            card.style.setProperty('--tilt-x', '0deg'); card.style.setProperty('--tilt-y', '0deg'); card.style.setProperty('--lift', '0px');
+          });
+        });
+      }
+
+      // Parallax sutil na composição visual do hero, limitado a poucos pixels.
+      const parallaxItem = $('[data-parallax]');
+      if (finePointer && parallaxItem) {
+        let parallaxTick = false;
+        window.addEventListener('pointermove', (event) => {
+          if (!motionIsActive() || parallaxTick) return;
+          parallaxTick = true;
+          requestAnimationFrame(() => {
+            const x = (event.clientX / Math.max(1, window.innerWidth) - .5) * 10;
+            const y = (event.clientY / Math.max(1, window.innerHeight) - .5) * 10;
+            parallaxItem.style.setProperty('--parallax-x', `${x.toFixed(1)}px`);
+            parallaxItem.style.setProperty('--parallax-y', `${y.toFixed(1)}px`);
+            parallaxTick = false;
+          });
+        }, { passive: true });
+      }
+
+      // Botões magnéticos e pequenos feedbacks de clique.
+      if (finePointer) {
+        $$('.magnetic').forEach((element) => {
+          element.addEventListener('pointermove', (event) => {
+            if (!motionIsActive()) return;
+            const rect = element.getBoundingClientRect();
+            const magnetStrength = .12 * (Math.max(0, Number(preferences.intensity) || 0) / 82);
+            const dx = (event.clientX - rect.left - rect.width / 2) * magnetStrength;
+            const dy = (event.clientY - rect.top - rect.height / 2) * magnetStrength;
+            element.style.transform = `translate3d(${dx}px,${dy}px,0)`;
+          });
+          element.addEventListener('pointerleave', () => { element.style.transform = ''; });
+        });
+      }
+      $$('a.magnetic, button.magnetic').forEach((element) => {
+        element.addEventListener('click', (event) => {
+          if (reducedMotion || !preferences.motion) return;
+          const rect = element.getBoundingClientRect();
+          const ripple = document.createElement('span');
+          ripple.className = 'ripple';
+          ripple.style.left = `${event.clientX ? event.clientX - rect.left : rect.width / 2}px`;
+          ripple.style.top = `${event.clientY ? event.clientY - rect.top : rect.height / 2}px`;
+          element.style.position = element.style.position || 'relative';
+          element.style.overflow = 'hidden';
+          element.appendChild(ripple);
+          window.setTimeout(() => ripple.remove(), 700);
+        });
+      });
+
+      // Cursor com rastro suave, apenas em dispositivos com mouse/trackpad.
+      const cursorRing = $('#cursor-ring');
+      const cursorDot = $('#cursor-dot');
+      let mouseX = -100, mouseY = -100, ringX = -100, ringY = -100, cursorFrame = 0;
+      if (finePointer && !reducedMotion && cursorRing && cursorDot) {
+        window.addEventListener('pointermove', (event) => { mouseX = event.clientX; mouseY = event.clientY; }, { passive: true });
+        const animateCursor = () => {
+          if (!preferences.cursor) { cursorFrame = 0; return; }
+          ringX += (mouseX - ringX) * .16; ringY += (mouseY - ringY) * .16;
+          cursorRing.style.transform = `translate3d(${ringX}px,${ringY}px,0)`;
+          cursorDot.style.transform = `translate3d(${mouseX}px,${mouseY}px,0)`;
+          cursorFrame = requestAnimationFrame(animateCursor);
+        };
+        const syncCursor = () => {
+          const enabled = Boolean(preferences.cursor) && finePointer && motionIsActive();
+          document.body.classList.toggle('has-custom-cursor', enabled);
+          if (enabled && !cursorFrame) cursorFrame = requestAnimationFrame(animateCursor);
+          if (!enabled && cursorFrame) { cancelAnimationFrame(cursorFrame); cursorFrame = 0; }
+          if (!enabled) {
+            cursorRing.style.transform = 'translate3d(-100px,-100px,0)';
+            cursorDot.style.transform = 'translate3d(-100px,-100px,0)';
+            cursorRing.classList.remove('is-hover');
+          }
+        };
+        // applyPreferences chama a sincronização também quando o visitante altera a opção.
+        window.__syncPortfolioCursor = syncCursor;
+        $$('a, button, input, [data-tilt]').forEach((element) => {
+          element.addEventListener('pointerenter', () => cursorRing.classList.add('is-hover'));
+          element.addEventListener('pointerleave', () => cursorRing.classList.remove('is-hover'));
+        });
+      }
+
+      // Partículas conectadas em canvas, com limite de densidade para preservar desempenho.
+      const canvas = $('#ambient-canvas');
+      const context = canvas?.getContext('2d', { alpha: true });
+      let particles = [];
+      let canvasWidth = 0, canvasHeight = 0, canvasFrame = 0;
+      const pointer = { x: -1000, y: -1000 };
+      window.addEventListener('pointermove', (event) => { pointer.x = event.clientX; pointer.y = event.clientY; }, { passive: true });
+      function resizeCanvas() {
+        if (!canvas || !context) return;
+        canvasWidth = window.innerWidth; canvasHeight = window.innerHeight;
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        canvas.width = Math.floor(canvasWidth * dpr); canvas.height = Math.floor(canvasHeight * dpr);
+        canvas.style.width = `${canvasWidth}px`; canvas.style.height = `${canvasHeight}px`;
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const count = preferences.particles && motionIsActive() ? Math.min(54, Math.max(18, Math.floor(canvasWidth * canvasHeight / 26000))) : 0;
+        particles = Array.from({ length: count }, () => ({
+          x: Math.random() * canvasWidth, y: Math.random() * canvasHeight,
+          vx: (Math.random() - .5) * .26 * (Number(preferences.intensity) / 82), vy: (Math.random() - .5) * .26 * (Number(preferences.intensity) / 82),
+          radius: Math.random() * 1.4 + .55
+        }));
+        if (count && !canvasFrame) canvasFrame = requestAnimationFrame(drawParticles);
+      }
+      function drawParticles() {
+        if (!context || !canvas) { canvasFrame = 0; return; }
+        context.clearRect(0, 0, canvasWidth, canvasHeight);
+        if (!preferences.particles || !motionIsActive()) { canvasFrame = 0; return; }
+        const rgb = getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim() || '124,92,252';
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          const dx = p.x - pointer.x, dy = p.y - pointer.y;
+          const distance = Math.hypot(dx, dy);
+          if (distance < 120 && distance > 0) { p.vx += (dx / distance) * .002; p.vy += (dy / distance) * .002; }
+          p.x += p.vx; p.y += p.vy; p.vx *= .999; p.vy *= .999;
+          if (p.x < -10) p.x = canvasWidth + 10; if (p.x > canvasWidth + 10) p.x = -10;
+          if (p.y < -10) p.y = canvasHeight + 10; if (p.y > canvasHeight + 10) p.y = -10;
+          context.beginPath(); context.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          context.fillStyle = `rgba(${rgb},.48)`; context.fill();
+          for (let j = i + 1; j < particles.length; j++) {
+            const other = particles[j]; const distanceBetween = Math.hypot(p.x - other.x, p.y - other.y);
+            if (distanceBetween < 118) {
+              context.beginPath(); context.moveTo(p.x, p.y); context.lineTo(other.x, other.y);
+              context.strokeStyle = `rgba(${rgb},${(1 - distanceBetween / 118) * .12})`;
+              context.lineWidth = .7; context.stroke();
+            }
+          }
+        }
+        canvasFrame = requestAnimationFrame(drawParticles);
+      }
+      window.addEventListener('resize', resizeCanvas, { passive: true });
+
+      // Links da navegação acompanham a seção atualmente visível.
+      const navLinks = $$('[data-nav-link]');
+      const observedSections = navLinks.map((link) => $(link.getAttribute('href'))).filter(Boolean);
+      if ('IntersectionObserver' in window) {
+        const sectionObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            navLinks.forEach((link) => {
+              const active = link.getAttribute('href') === `#${entry.target.id}`;
+              link.classList.toggle('is-active', active);
+              if (active) link.setAttribute('aria-current', 'location'); else link.removeAttribute('aria-current');
+            });
+          });
+        }, { rootMargin: '-28% 0px -62% 0px', threshold: 0 });
+        observedSections.forEach((section) => sectionObserver.observe(section));
+      }
+
+      applyPreferences();
+      savePreferences();
+    })();
+  </script>
+</body>
+</html>
