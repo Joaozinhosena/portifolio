@@ -1,910 +1,633 @@
+{%- set theme = site.get('theme') or {} -%}
+{%- set effects = site.get('effects') or {} -%}
+{%- set accent = theme.get('accent', '#8B5CF6') -%}
+{%- set accent_light = theme.get('accent_light', '#C4B5FD') -%}
+{%- set accent_rgb = theme.get('accent_rgb', '139,92,246') -%}
+{%- set bg = theme.get('background', '#09090F') -%}
+{%- set surface = theme.get('surface', '#14141D') -%}
 <!doctype html>
-<html lang="pt-BR" class="scroll-smooth">
+<html lang="pt-BR" class="scroll-smooth" data-accent="{{ accent }}" data-accent-light="{{ accent_light }}" data-accent-rgb="{{ accent_rgb }}" data-page-bg="{{ bg }}" data-surface="{{ surface }}" data-theme-preset="{{ theme.get('preset', 'violet') }}">
 <head>
-  {# Fallbacks para evitar UndefinedError quando app.py não define theme/effects. #}
-  {% set theme = site.get('theme') or {} %}
-  {% set effects = site.get('effects') or {} %}
-  {% set theme_accent = theme.get('accent', '#7C5CFC') %}
-  {% set theme_accent_light = theme.get('accent_light', '#C4B5FD') %}
-  {% set theme_accent_rgb = theme.get('accent_rgb', '124,92,252') %}
-  {% set theme_background = theme.get('background', '#0A0A12') %}
-  {% set theme_surface = theme.get('surface', '#15151F') %}
-  {% set effect_particles = effects.get('particles', true) %}
-  {% set effect_cursor = effects.get('cursor', true) %}
-  {% set effect_motion = effects.get('motion', true) %}
-  {% set effect_intensity = effects.get('intensity', 82) %}
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="{{ theme_background }}">
-  <meta name="description" content="Portfólio de {{ site.name }} — desenvolvimento web, projetos e contato.">
-  <title>{{ site.brand_first }} {{ site.brand_last }} | Portfólio</title>
-
+  <meta name="theme-color" content="{{ bg }}">
+  <meta name="description" content="Portfólio de {{ site.name }} — desenvolvimento web, experiências interativas e projetos.">
+  <title>{{ site.brand_first }} {{ site.brand_last }} — Portfólio</title>
   <link rel="icon" href="{{ url_for('favicon') }}" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-
-  <!-- Tailwind no navegador: toda a personalização permanece neste HTML, sem arquivo .css. -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
+  <script>
+    // As variáveis dinâmicas vêm de data-* no HTML. Assim o CSS permanece
+    // CSS válido no VS Code, sem expressões Jinja dentro da folha de estilos.
+    (() => {
+      const root = document.documentElement;
+      const variables = {
+        '--accent': root.dataset.accent,
+        '--accent-light': root.dataset.accentLight,
+        '--accent-rgb': root.dataset.accentRgb,
+        '--page-bg': root.dataset.pageBg,
+        '--surface': root.dataset.surface
+      };
+      Object.entries(variables).forEach(([name, value]) => {
+        if (value) root.style.setProperty(name, value);
+      });
+    })();
+  </script>
   <style>
-    :root {
-      color-scheme: dark;
-      --accent: {{ theme_accent }};
-      --accent-light: {{ theme_accent_light }};
-      --accent-rgb: {{ theme_accent_rgb }};
-      --page-bg: {{ theme_background }};
-      --surface: {{ theme_surface }};
-      --motion-scale: .82;
-      --scroll-progress: 0%;
-      --cursor-x: 50vw;
-      --cursor-y: 50vh;
-    }
-    * { box-sizing: border-box; }
-    .hidden { display: none !important; }
-    html { scroll-behavior: smooth; scroll-padding-top: 100px; }
-    body { overflow-x: hidden; background: var(--page-bg); }
-    body::before {
-      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-      opacity: .16;
-      background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
-      background-size: 54px 54px;
-      mask-image: linear-gradient(to bottom, black, transparent 82%);
-    }
-    nav, main, footer { position: relative; z-index: 1; }
-    ::selection { background: rgba(var(--accent-rgb), .38); color: #fff; }
-    a, button, input { -webkit-tap-highlight-color: transparent; }
-    a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 4px; }
-    #scroll-progress { position: fixed; inset: 0 auto auto 0; height: 3px; width: var(--scroll-progress); z-index: 100; background: linear-gradient(90deg, var(--accent), var(--accent-light)); box-shadow: 0 0 18px rgba(var(--accent-rgb), .75); }
-    #ambient-canvas { position: fixed; inset: 0; z-index: 0; width: 100%; height: 100%; pointer-events: none; opacity: .44; }
-    .accent-text { color: var(--accent-light) !important; }
-    .accent-gradient { background: linear-gradient(110deg, var(--accent), var(--accent-light)) !important; }
-    .accent-soft { background: rgba(var(--accent-rgb), .12) !important; }
-    .accent-border { border-color: rgba(var(--accent-rgb), .44) !important; }
-    .accent-glow { box-shadow: 0 12px 34px rgba(var(--accent-rgb), .22); }
-    .hero-orb { position: absolute; border-radius: 9999px; filter: blur(2px); pointer-events: none; background: radial-gradient(circle at 35% 35%, rgba(var(--accent-rgb), .34), rgba(var(--accent-rgb), 0) 70%); animation: orb-drift 13s ease-in-out infinite alternate; }
-    .hero-orb.orb-two { animation-duration: 17s; animation-delay: -4s; }
-    @keyframes orb-drift { from { transform: translate3d(-12px,-8px,0) scale(.94); } to { transform: translate3d(18px,16px,0) scale(1.08); } }
-    @keyframes float-soft { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-11px) rotate(.5deg); } }
-    @keyframes shimmer { 0% { background-position: 180% 0; } 100% { background-position: -180% 0; } }
-    @keyframes caret-blink { 0%,48% { opacity: 1; } 49%,100% { opacity: 0; } }
-    @keyframes ripple-out { to { transform: scale(4); opacity: 0; } }
-    .floating-card { animation: float-soft 7s ease-in-out infinite; }
-    .typing-caret { display: inline-block; width: 2px; height: 1em; margin-left: 4px; vertical-align: -.12em; background: var(--accent-light); animation: caret-blink 1s steps(2, start) infinite; }
-    .tech-chip { transition: transform .35s cubic-bezier(.2,.8,.2,1), filter .35s, box-shadow .35s; }
-    .tech-chip:hover { transform: translateY(-7px) rotate(-4deg) scale(1.08); filter: saturate(1.2); box-shadow: 0 12px 26px rgba(0,0,0,.28); }
-    .project-card { position: relative; isolation: isolate; transform: perspective(1100px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateY(var(--lift, 0px)); transform-style: preserve-3d; transition: transform .42s cubic-bezier(.2,.8,.2,1), border-color .35s, box-shadow .35s; will-change: transform; }
-    .project-card::before { content: ""; position: absolute; z-index: 0; inset: 0; opacity: 0; pointer-events: none; background: radial-gradient(420px circle at var(--pointer-x, 50%) var(--pointer-y, 50%), rgba(var(--accent-rgb), .16), transparent 52%); transition: opacity .3s; }
-    .project-card:hover::before { opacity: 1; }
-    .project-card:hover { border-color: rgba(var(--accent-rgb), .48) !important; box-shadow: 0 24px 60px rgba(var(--accent-rgb), .12); }
-    .accent-gradient:hover { box-shadow: 0 14px 34px rgba(var(--accent-rgb), .28); }
-    [data-parallax] { translate: var(--parallax-x, 0px) var(--parallax-y, 0px); transition: translate .25s ease-out; }
-    .project-card > * { position: relative; z-index: 1; }
-    .project-visual { transition: transform .7s cubic-bezier(.2,.8,.2,1), filter .5s; }
-    .project-card:hover .project-visual { transform: scale(1.045); filter: saturate(1.12); }
-    .skill-fill { width: 0; transition: width 1.2s cubic-bezier(.16,1,.3,1); }
-    .magnetic { transition: transform .24s cubic-bezier(.2,.8,.2,1), box-shadow .3s, filter .3s; }
-    .magnetic:hover { filter: brightness(1.08); }
-    .section-kicker { color: var(--accent-light) !important; }
-    .nav-link { position: relative; transition: color .25s ease; }
-    .nav-link::after { content: ""; position: absolute; left: 0; right: 100%; bottom: -9px; height: 2px; border-radius: 2px; background: linear-gradient(90deg,var(--accent),var(--accent-light)); transition: right .3s cubic-bezier(.2,.8,.2,1); }
-    .nav-link:hover::after, .nav-link.is-active::after { right: 0; }
-    .nav-link.is-active { color: #fff !important; }
-    .reveal-ready [data-reveal] { opacity: 0; transform: translate3d(0, 28px, 0) scale(.985); transition: opacity calc(760ms * var(--motion-scale)) cubic-bezier(.2,.8,.2,1), transform calc(760ms * var(--motion-scale)) cubic-bezier(.2,.8,.2,1); transition-delay: var(--reveal-delay, 0ms); }
-    .reveal-ready [data-reveal="left"] { transform: translate3d(-34px, 0, 0); }
-    .reveal-ready [data-reveal="right"] { transform: translate3d(34px, 0, 0); }
-    .reveal-ready [data-reveal].is-visible { opacity: 1; transform: translate3d(0,0,0) scale(1); }
-    .motion-off *, .motion-off *::before, .motion-off *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .001ms !important; }
-    .cursor-ring, .cursor-dot { position: fixed; top: 0; left: 0; z-index: 120; pointer-events: none; opacity: 0; border-radius: 999px; transform: translate3d(-100px,-100px,0); }
-    .cursor-ring { width: 34px; height: 34px; border: 1px solid rgba(var(--accent-rgb), .75); margin: -17px 0 0 -17px; transition: width .25s,height .25s,background .25s,border-color .25s,opacity .2s; }
-    .cursor-dot { width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; background: var(--accent-light); box-shadow: 0 0 14px rgba(var(--accent-rgb), .9); }
-    body.has-custom-cursor, body.has-custom-cursor a, body.has-custom-cursor button { cursor: none; }
-    body.has-custom-cursor .cursor-ring, body.has-custom-cursor .cursor-dot { opacity: 1; }
-    .cursor-ring.is-hover { width: 54px; height: 54px; margin: -27px 0 0 -27px; background: rgba(var(--accent-rgb), .09); border-color: var(--accent-light); }
-    .ripple { position: absolute; width: 12px; height: 12px; border-radius: 999px; pointer-events: none; background: rgba(255,255,255,.45); transform: translate(-50%,-50%); animation: ripple-out .65s ease-out forwards; }
-    #customizer-panel { opacity: 0; visibility: hidden; transform: translateY(10px) scale(.96); transform-origin: bottom right; transition: opacity .25s, transform .25s, visibility .25s; }
-    #customizer-panel[hidden] { display: none; }
-    #customizer-panel.is-open { opacity: 1; transform: translateY(0) scale(1); visibility: visible; }
-    .theme-swatch { width: 28px; height: 28px; border: 2px solid rgba(255,255,255,.2); border-radius: 999px; transition: transform .2s,border-color .2s; }
-    .theme-swatch[aria-pressed="true"] { transform: scale(1.14); border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.12); }
-    #back-to-top { opacity: 0; visibility: hidden; transform: translateY(10px); transition: opacity .25s,transform .25s,visibility .25s; }
-    #back-to-top.is-visible { opacity: 1; visibility: visible; transform: translateY(0); }
-    @media (hover: none), (pointer: coarse) { .project-card { transform: none !important; } }
-    @media (max-width: 767px) { #ambient-canvas { opacity: .22; } .hero-orb { filter: blur(18px); } }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
-      #ambient-canvas, .cursor-ring, .cursor-dot { display: none !important; }
-    }
+    :root{color-scheme:dark;--accent:#8B5CF6;--accent-light:#C4B5FD;--accent-rgb:139,92,246;--page-bg:#09090F;--surface:#14141D;--motion-scale:.88;--scroll-progress:0%;--mouse-x:50%;--mouse-y:50%}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;scroll-padding-top:100px}
+    body{margin:0;overflow-x:hidden;background:var(--page-bg);color:#f4f1f8;font-family:'DM Sans',sans-serif}
+    body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.18;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:66px 66px;mask-image:linear-gradient(to bottom,#000 0%,transparent 80%)}
+    ::selection{background:rgba(var(--accent-rgb),.35);color:#fff}
+    a,button{ -webkit-tap-highlight-color:transparent }
+    a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent-light);outline-offset:4px}
+    .display{font-family:'Space Grotesk',sans-serif;letter-spacing:-.045em}
+    .mono{font-family:'DM Mono',monospace}
+    .muted{color:#a8a4b6}
+    .accent{color:var(--accent-light)}
+    .accent-bg{background:linear-gradient(115deg,var(--accent),var(--accent-light))}
+    .accent-soft{background:rgba(var(--accent-rgb),.13)}
+    .accent-border{border-color:rgba(var(--accent-rgb),.35)}
+    .section-wrap{width:min(1180px,calc(100% - 44px));margin-inline:auto}
+    .section-kicker{display:inline-flex;align-items:center;gap:10px;color:var(--accent-light);font:500 11px 'DM Mono',monospace;letter-spacing:.19em;text-transform:uppercase}
+    .section-kicker::before{content:"";width:24px;height:1px;background:var(--accent-light);opacity:.8}
+    .section-title{font:600 clamp(2.3rem,5vw,4.5rem)/1.03 'Space Grotesk',sans-serif;letter-spacing:-.055em}
+    .outline-text{-webkit-text-stroke:1px rgba(255,255,255,.55);color:transparent}
+    #scroll-progress{position:fixed;inset:0 auto auto 0;height:2px;width:var(--scroll-progress);z-index:120;background:linear-gradient(90deg,var(--accent),var(--accent-light));box-shadow:0 0 15px rgba(var(--accent-rgb),.6)}
+    #ambient-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.58}
+    nav,main,footer{position:relative;z-index:1}
+    .site-nav{transition:background .3s,border-color .3s,transform .35s}
+    .site-nav.is-scrolled{background:rgba(9,9,15,.88);border-color:rgba(255,255,255,.11);backdrop-filter:blur(22px)}
+    .nav-link{position:relative;color:#a8a4b6;transition:color .25s}
+    .nav-link::after{content:"";position:absolute;left:0;right:100%;bottom:-9px;height:1px;background:var(--accent-light);transition:right .3s cubic-bezier(.2,.8,.2,1)}
+    .nav-link:hover,.nav-link.is-active{color:white}.nav-link:hover::after,.nav-link.is-active::after{right:0}
+    .hero-shell{min-height:min(820px,calc(100svh - 72px));display:grid;align-items:center;position:relative;padding-block:88px 105px}
+    .hero-glow{position:absolute;width:440px;height:440px;border-radius:50%;filter:blur(95px);opacity:.16;background:var(--accent);pointer-events:none}
+    .hero-grid{position:absolute;inset:0;pointer-events:none;opacity:.26;background:radial-gradient(circle at 68% 42%,rgba(var(--accent-rgb),.24),transparent 31%),linear-gradient(115deg,transparent 45%,rgba(255,255,255,.025) 45.1%,transparent 45.3%)}
+    .hero-visual{position:relative;min-height:470px;perspective:1000px}
+    .code-window{position:absolute;inset:42px 4px 28px 12px;overflow:hidden;border:1px solid rgba(255,255,255,.14);border-radius:22px;background:linear-gradient(145deg,rgba(30,27,43,.94),rgba(12,12,19,.96));box-shadow:0 35px 100px rgba(0,0,0,.42);transform:rotateY(-8deg) rotateX(4deg);transform-style:preserve-3d}
+    .code-top{height:48px;display:flex;align-items:center;gap:7px;padding:0 17px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025)}
+    .code-dot{width:8px;height:8px;border-radius:50%;background:#77718c}.code-dot:nth-child(1){background:#fb7185}.code-dot:nth-child(2){background:#fbbf24}.code-dot:nth-child(3){background:#4ade80}
+    .code-body{padding:27px 25px;font:12px/2 'DM Mono',monospace;color:#aca8ba}
+    .code-line{display:block;white-space:nowrap}.code-no{display:inline-block;width:27px;color:#666276;user-select:none}.code-purple{color:#c4b5fd}.code-green{color:#86efac}.code-yellow{color:#fde68a}.code-blue{color:#7dd3fc}
+    .floating-note{position:absolute;z-index:3;border:1px solid rgba(255,255,255,.14);border-radius:15px;background:rgba(20,20,29,.92);box-shadow:0 20px 60px rgba(0,0,0,.35);backdrop-filter:blur(15px)}
+    .note-one{right:-8px;top:0;padding:15px 17px}.note-two{left:-15px;bottom:0;padding:15px 18px}
+    .status-pulse{position:relative;width:8px;height:8px;border-radius:99px;background:#70e1aa}.status-pulse::after{content:"";position:absolute;inset:-5px;border:1px solid #70e1aa;border-radius:99px;animation:pulse-ring 2s infinite}
+    @keyframes pulse-ring{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.8);opacity:0}}
+    .scroll-cue{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;color:#777286;font:10px 'DM Mono',monospace;letter-spacing:.16em;text-transform:uppercase}
+    .scroll-cue-line{height:37px;width:1px;background:linear-gradient(var(--accent-light),transparent);animation:cue-drop 1.8s ease-in-out infinite}
+    @keyframes cue-drop{0%,100%{transform:scaleY(.55);transform-origin:top;opacity:.45}50%{transform:scaleY(1);opacity:1}}
+    .surface-section{background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.008));border-block:1px solid rgba(255,255,255,.075)}
+    .comparison-stage{position:relative;min-height:360px;overflow:hidden;border:1px solid rgba(255,255,255,.12);border-radius:22px;background:#15141f;box-shadow:0 25px 80px rgba(0,0,0,.25)}
+    .comparison-divider{position:absolute;z-index:15;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 16px rgba(255,255,255,.4);pointer-events:none;transform:translateX(-50%)}
+    .comparison-divider span{position:absolute;left:50%;top:50%;display:grid;width:38px;height:38px;place-items:center;transform:translate(-50%,-50%);border:2px solid white;border-radius:50%;background:var(--accent);font-size:17px;color:white}
+    .comparison-before{clip-path:inset(0 50% 0 0)}
+    .architecture-board{position:relative;min-height:430px;border:1px solid rgba(255,255,255,.1);border-radius:22px;background:radial-gradient(circle at center,rgba(var(--accent-rgb),.12),transparent 55%),rgba(255,255,255,.018);overflow:hidden}
+    .architecture-lines{position:absolute;inset:0;width:100%;height:100%}.architecture-path{animation:dash-flow 18s linear infinite}
+    @keyframes dash-flow{to{stroke-dashoffset:-160}}
+    .architecture-center{position:absolute;left:50%;top:50%;display:flex;width:112px;height:112px;transform:translate(-50%,-50%);flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid rgba(var(--accent-rgb),.45);border-radius:30px;background:linear-gradient(145deg,rgba(var(--accent-rgb),.22),rgba(15,14,23,.92));box-shadow:0 0 60px rgba(var(--accent-rgb),.18)}
+    .architecture-node{position:absolute;z-index:2;display:flex;min-width:116px;flex-direction:column;align-items:center;gap:3px;border:1px solid rgba(255,255,255,.13);border-radius:14px;background:rgba(18,17,27,.92);padding:12px 15px;box-shadow:0 13px 35px rgba(0,0,0,.2);animation:node-float 5s ease-in-out infinite}
+    .architecture-node b{font-size:11px}.architecture-node small{font:9px 'DM Mono',monospace;color:#898498}.architecture-node>span{font-size:16px}.node-top{left:50%;top:8%;transform:translateX(-50%)}.node-left{left:5%;top:47%;animation-delay:-1s}.node-right{right:5%;top:47%;animation-delay:-2s}.node-bottom{left:50%;bottom:8%;transform:translateX(-50%);animation-delay:-3s}
+    @keyframes node-float{0%,100%{translate:0 0}50%{translate:0 -7px}}
+    .architecture-label{position:absolute;bottom:18px;right:20px;font-size:8px;letter-spacing:.18em;color:#777286}
+    .skill-icon{background:var(--accent)}.skill-fill{transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+    .service-card,.principle-card,.reason-card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.015));transition:border-color .35s,background .35s,transform .35s}
+    .service-card::before,.project-card::before,.principle-card::before,.reason-card::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(320px circle at var(--mouse-x) var(--mouse-y),rgba(var(--accent-rgb),.16),transparent 60%);transition:opacity .35s}
+    .service-card:hover,.principle-card:hover,.reason-card:hover{border-color:rgba(var(--accent-rgb),.48);background:rgba(var(--accent-rgb),.055);transform:translateY(-5px)}
+    .service-card:hover::before,.project-card:hover::before,.principle-card:hover::before,.reason-card:hover::before{opacity:1}
+    .service-icon{display:grid;place-items:center;width:48px;height:48px;border:1px solid rgba(var(--accent-rgb),.3);border-radius:15px;background:rgba(var(--accent-rgb),.12);color:var(--accent-light);font-size:22px}
+    .tag{display:inline-flex;border:1px solid rgba(255,255,255,.1);border-radius:99px;padding:6px 9px;color:#a8a4b6;font:10px 'DM Mono',monospace}
+    .project-card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.1);border-radius:20px;background:#12121b;transform-style:preserve-3d;transition:border-color .3s,box-shadow .3s}
+    .project-card:hover{border-color:rgba(var(--accent-rgb),.5);box-shadow:0 25px 65px rgba(0,0,0,.28)}
+    .project-visual{height:225px;position:relative;overflow:hidden;background:var(--project-bg);isolation:isolate}
+    .project-visual::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,transparent 55%,rgba(4,4,9,.44))}
+    .project-visual img{width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+    .project-card:hover .project-visual img{transform:scale(1.07)}
+    .project-art{position:absolute;inset:20px;display:grid;place-items:center;overflow:hidden}
+    .mock-window{width:min(84%,390px);padding:13px;border:1px solid rgba(255,255,255,.26);border-radius:14px;background:rgba(8,8,15,.7);box-shadow:0 20px 45px rgba(0,0,0,.3);backdrop-filter:blur(12px);transform:rotate(-4deg);transition:transform .7s}
+    .project-card:hover .mock-window{transform:rotate(0) translateY(-4px)}
+    .mock-line{height:7px;border-radius:99px;background:rgba(255,255,255,.23)}
+    .mock-tile{border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(255,255,255,.1)}
+    .project-filter{border:1px solid rgba(255,255,255,.12);border-radius:99px;padding:9px 15px;color:#a8a4b6;font-size:12px;transition:.25s}
+    .project-filter:hover,.project-filter[aria-pressed="true"]{border-color:rgba(var(--accent-rgb),.55);background:rgba(var(--accent-rgb),.15);color:#fff}
+    .project-card[hidden]{display:none}
+    .project-arrow{display:inline-grid;width:34px;height:34px;place-items:center;border:1px solid rgba(255,255,255,.13);border-radius:50%;transition:.3s}
+    .project-link:hover .project-arrow{background:var(--accent);border-color:var(--accent);transform:rotate(45deg)}
+    .process-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:75px;align-items:start}
+    .process-visual{position:sticky;top:130px;min-height:410px;border:1px solid rgba(255,255,255,.1);border-radius:22px;background:radial-gradient(circle at 55% 40%,rgba(var(--accent-rgb),.17),transparent 52%),linear-gradient(145deg,#171521,#101018);overflow:hidden}
+    .process-visual::before{content:"";position:absolute;inset:18px;border:1px dashed rgba(255,255,255,.1);border-radius:15px}
+    .process-orbit{position:absolute;width:230px;height:230px;left:50%;top:45%;transform:translate(-50%,-50%);border:1px solid rgba(var(--accent-rgb),.38);border-radius:50%;animation:orbit 22s linear infinite}
+    .process-orbit::before,.process-orbit::after{content:"";position:absolute;border:1px solid rgba(255,255,255,.1);border-radius:50%}
+    .process-orbit::before{inset:22px}.process-orbit::after{inset:48px;border-color:rgba(var(--accent-rgb),.24)}
+    @keyframes orbit{to{transform:translate(-50%,-50%) rotate(360deg)}}
+    .process-core{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);width:95px;height:95px;display:grid;place-items:center;border-radius:28px;background:linear-gradient(145deg,var(--accent),var(--accent-light));color:#fff;font:700 25px 'Space Grotesk',sans-serif;box-shadow:0 0 75px rgba(var(--accent-rgb),.34)}
+    .process-step{position:relative;padding:25px 0 30px 25px;border-bottom:1px solid rgba(255,255,255,.09);opacity:.54;transition:opacity .4s}
+    .process-step::before{content:"";position:absolute;left:0;top:33px;width:8px;height:8px;border-radius:50%;background:#5e596c;transition:.35s}
+    .process-step.is-active{opacity:1}.process-step.is-active::before{background:var(--accent-light);box-shadow:0 0 0 6px rgba(var(--accent-rgb),.14)}
+    .process-progress{position:absolute;left:3px;top:32px;bottom:30px;width:1px;background:linear-gradient(var(--accent),transparent);transform-origin:top}
+    .marquee{overflow:hidden;border-block:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.018)}
+    .marquee-track{display:flex;width:max-content;animation:marquee 36s linear infinite}
+    .marquee:hover .marquee-track{animation-play-state:paused}
+    .marquee-item{display:flex;align-items:center;gap:22px;padding:20px 15px;color:#c8c4d2;font:500 13px 'DM Mono',monospace;letter-spacing:.03em;white-space:nowrap}
+    .marquee-star{color:var(--accent-light);font-size:17px}
+    @keyframes marquee{to{transform:translateX(-50%)}}
+    .faq-item{border-bottom:1px solid rgba(255,255,255,.11)}
+    .faq-question{display:flex;width:100%;align-items:center;justify-content:space-between;gap:20px;padding:22px 0;text-align:left;font-size:15px;font-weight:600}
+    .faq-icon{display:grid;place-items:center;width:29px;height:29px;flex:0 0 29px;border:1px solid rgba(255,255,255,.16);border-radius:50%;color:var(--accent-light);transition:transform .3s,background .3s}
+    .faq-item.is-open .faq-icon{transform:rotate(45deg);background:rgba(var(--accent-rgb),.16)}
+    .faq-answer{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s ease}
+    .faq-answer>div{overflow:hidden}.faq-item.is-open .faq-answer{grid-template-rows:1fr}.faq-answer p{padding:0 45px 22px 0;color:#a8a4b6;font-size:13px;line-height:1.9}
+    .contact-shell{position:relative;overflow:hidden;border:1px solid rgba(var(--accent-rgb),.28);border-radius:28px;background:radial-gradient(circle at 85% 15%,rgba(var(--accent-rgb),.19),transparent 32%),linear-gradient(130deg,#171420,#101018 72%)}
+    .field{width:100%;border:1px solid rgba(255,255,255,.13);border-radius:12px;background:rgba(0,0,0,.23);padding:13px 15px;color:#fff;font:13px 'DM Sans',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s}
+    .field:focus{border-color:var(--accent-light);box-shadow:0 0 0 3px rgba(var(--accent-rgb),.13)}.field::placeholder{color:#777286}
+    .custom-panel{opacity:0;visibility:hidden;transform:translateY(12px) scale(.97);transform-origin:bottom right;transition:.25s}
+    .custom-panel.is-open{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+    .theme-swatch{width:27px;height:27px;border:2px solid rgba(255,255,255,.2);border-radius:50%;transition:transform .2s}.theme-swatch[aria-pressed="true"]{transform:scale(1.16);border-color:white;box-shadow:0 0 0 3px rgba(255,255,255,.13)}
+    .cursor-ring,.cursor-dot{position:fixed;left:0;top:0;z-index:130;pointer-events:none;border-radius:50%;opacity:0;transform:translate(-100px,-100px)}
+    .cursor-ring{width:36px;height:36px;margin:-18px 0 0 -18px;border:1px solid rgba(var(--accent-rgb),.75);transition:width .22s,height .22s,background .22s,border-color .22s}
+    .cursor-dot{width:5px;height:5px;margin:-2.5px 0 0 -2.5px;background:var(--accent-light);box-shadow:0 0 12px rgba(var(--accent-rgb),.9)}
+    body.has-cursor,body.has-cursor a,body.has-cursor button{cursor:none}body.has-cursor .cursor-ring,body.has-cursor .cursor-dot{opacity:1}.cursor-ring.is-hover{width:55px;height:55px;margin:-27.5px 0 0 -27.5px;background:rgba(var(--accent-rgb),.1)}
+    .reveal{will-change:transform,opacity}
+    .motion-off *, .motion-off *::before,.motion-off *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+    @media(max-width:900px){.process-layout{grid-template-columns:1fr;gap:25px}.process-visual{position:relative;top:auto;min-height:330px}.process-layout .process-visual{order:0}.process-list{order:1}}
+    @media(max-width:700px){.section-wrap{width:min(100% - 32px,1180px)}.hero-shell{min-height:auto;padding-block:78px 90px}.hero-visual{min-height:360px;margin-top:18px}.code-window{inset:26px 3px 20px}.code-body{padding:19px 14px;font-size:10px}.note-one{right:0}.note-two{left:0}.section-title{font-size:clamp(2.1rem,11vw,3.2rem)}.project-visual{height:205px}.scroll-cue{display:none}}
+    @media(hover:none),(pointer:coarse){.cursor-ring,.cursor-dot{display:none!important}.project-card{transform:none!important}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}#ambient-canvas,.cursor-ring,.cursor-dot{display:none!important}}
+  
+    .github-repo-art{height:225px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 75% 20%,rgba(255,255,255,.13),transparent 34%),var(--project-bg,linear-gradient(135deg,#182b4b,#526ca3));isolation:isolate}
+    .github-repo-art:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(5,5,12,.08),rgba(5,5,12,.65));z-index:-1}
+    .github-code-window{width:min(78%,360px);border:1px solid rgba(255,255,255,.18);border-radius:15px;background:rgba(8,8,15,.64);box-shadow:0 22px 55px rgba(0,0,0,.28);backdrop-filter:blur(12px);padding:16px;transform:rotate(-4deg);transition:transform .65s cubic-bezier(.2,.8,.2,1),border-color .3s}
+    .project-card:hover .github-code-window{transform:rotate(0) translateY(-5px) scale(1.025);border-color:rgba(255,255,255,.34)}
+    .github-code-line{height:6px;border-radius:99px;background:rgba(255,255,255,.17);margin-top:10px}
+    .github-code-line:nth-child(2){width:78%;background:rgba(196,181,253,.7)}.github-code-line:nth-child(3){width:57%}.github-code-line:nth-child(4){width:88%;background:rgba(110,231,183,.38)}.github-code-line:nth-child(5){width:44%}
+    .github-project-actions{display:flex;flex-wrap:wrap;gap:9px}
+    .github-project-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(255,255,255,.13);border-radius:999px;padding:9px 13px;font-size:11px;font-weight:700;transition:transform .25s,border-color .25s,background .25s}
+    .github-project-btn:hover{transform:translateY(-2px);border-color:rgba(var(--accent-rgb),.65);background:rgba(var(--accent-rgb),.14)}
+    .github-project-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+        @media(max-width:700px){.github-repo-art{height:205px}}
+
   </style>
 </head>
-
-<body class="min-h-screen bg-[#0A0A12] font-sans text-[#F3F3F8] antialiased selection:bg-violet-400/30 selection:text-white" style="font-family:'Inter',sans-serif; --accent: {{ theme_accent }}; --accent-light: {{ theme_accent_light }}; --accent-rgb: {{ theme_accent_rgb }}; --page-bg: {{ theme_background }}; --surface: {{ theme_surface }}">
+<body
+  data-effects-particles="{{ 'true' if effects.get('particles', true) else 'false' }}"
+  data-effects-cursor="{{ 'true' if effects.get('cursor', true) else 'false' }}"
+  data-effects-motion="{{ 'true' if effects.get('motion', true) else 'false' }}"
+  data-effects-intensity="{{ effects.get('intensity', 88) }}">
   <div id="scroll-progress" aria-hidden="true"></div>
   <canvas id="ambient-canvas" aria-hidden="true"></canvas>
   <div class="cursor-ring" id="cursor-ring" aria-hidden="true"></div><div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
-  <a href="#top" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[150] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-black">Pular para o conteúdo</a>
-  <!-- Navegação -->
-  <nav id="site-nav" class="sticky top-0 z-50 border-b border-[#262635] bg-[#0A0A12]/80 backdrop-blur-xl transition-all duration-300">
-    <div class="mx-auto flex h-20 max-w-6xl items-center justify-between px-5 sm:px-6 lg:px-8">
-      <a href="#top" class="flex items-center gap-3 font-bold tracking-tight" aria-label="Voltar ao início">
-        <span class="flex h-9 w-9 items-center justify-center rounded-xl accent-gradient text-white">
-          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16" />
-          </svg>
-        </span>
-        <span class="text-lg" style="font-family:'Space Grotesk',sans-serif">
-          {{ site.brand_first }} <span class="accent-text">{{ site.brand_last }}</span>
-        </span>
+
+  <nav id="site-nav" class="site-nav fixed inset-x-0 top-0 z-50 border-b border-white/[.06] bg-[#09090F]/55 backdrop-blur-lg">
+    <div class="section-wrap flex h-[76px] items-center justify-between">
+      <a href="#inicio" class="flex items-center gap-3" aria-label="Voltar ao início">
+        <span class="grid h-9 w-9 place-items-center rounded-xl accent-bg text-sm font-bold text-white">M<span class="text-[#21182f]">/</span></span>
+        <span class="display text-lg font-bold tracking-tight">{{ site.brand_first }} <span class="accent">{{ site.brand_last }}</span></span>
       </a>
-
-      <div class="hidden items-center gap-7 text-sm font-medium md:flex">
-        <a class="nav-link text-[#9796AC] transition hover:text-white" data-nav-link href="#top">Início</a>
-        <a class="nav-link text-[#9796AC] transition hover:text-white" data-nav-link href="#sobre">Sobre</a>
-        <a class="nav-link text-[#9796AC] transition hover:text-white" data-nav-link href="#habilidades">Habilidades</a>
-        <a class="nav-link text-[#9796AC] transition hover:text-white" data-nav-link href="#projetos">Projetos</a>
-        <a class="nav-link text-[#9796AC] transition hover:text-white" data-nav-link href="#contato">Contato</a>
+      <div class="hidden items-center gap-7 text-[13px] font-medium md:flex">
+        <a class="nav-link" data-nav href="#inicio">Início</a><a class="nav-link" data-nav href="#frentes">O que faço</a><a class="nav-link" data-nav href="#projetos">Projetos</a><a class="nav-link" data-nav href="#arquitetura">Stack</a><a class="nav-link" data-nav href="#metodo">Método</a><a class="nav-link" data-nav href="#sobre">Sobre</a><a class="nav-link" data-nav href="#contato">Contato</a>
       </div>
-
       <div class="flex items-center gap-3">
-        <a href="#contato" class="magnetic hidden items-center gap-2 rounded-full accent-gradient px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-violet-500/20 sm:inline-flex">
-          Contrate-me
-          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M7 17 17 7M7 7h10v10" />
-          </svg>
-        </a>
-
-        <button
-          id="menu-toggle"
-          type="button"
-          aria-label="Abrir menu"
-          aria-controls="mobile-menu"
-          aria-expanded="false"
-          class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#262635] text-white md:hidden"
-        >
-          <svg id="menu-open-icon" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M4 7h16M4 12h16M4 17h16" />
-          </svg>
-          <svg id="menu-close-icon" viewBox="0 0 24 24" class="hidden h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="m6 6 12 12M18 6 6 18" />
-          </svg>
-        </button>
+        <a href="#contato" class="magnetic hidden rounded-full border border-white/15 px-4 py-2.5 text-xs font-semibold transition hover:border-violet-300/50 hover:bg-white/5 sm:inline-flex">Vamos conversar <span class="ml-2 accent">↗</span></a>
+        <button id="menu-toggle" class="grid h-10 w-10 place-items-center rounded-xl border border-white/15 text-white md:hidden" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu"><span id="menu-icon">☰</span></button>
       </div>
     </div>
-
-    <div id="mobile-menu" class="hidden border-t border-[#262635] bg-[#101018] px-5 py-5 md:hidden">
-      <div class="mx-auto flex max-w-6xl flex-col gap-4 text-sm font-medium">
-        <a class="text-[#9796AC] hover:text-white" href="#top">Início</a>
-        <a class="text-[#9796AC] hover:text-white" href="#sobre">Sobre</a>
-        <a class="text-[#9796AC] hover:text-white" href="#habilidades">Habilidades</a>
-        <a class="text-[#9796AC] hover:text-white" href="#projetos">Projetos</a>
-        <a class="text-[#9796AC] hover:text-white" href="#contato">Contato</a>
-        <a href="#contato" class="magnetic mt-1 inline-flex w-fit rounded-full accent-gradient px-5 py-3 font-semibold text-white">Contrate-me</a>
-      </div>
+    <div id="mobile-menu" class="hidden border-t border-white/10 bg-[#0c0b13]/95 px-5 py-5 backdrop-blur-xl md:hidden">
+      <div class="mx-auto flex max-w-6xl flex-col gap-4 text-sm"><a href="#inicio">Início</a><a href="#frentes">O que faço</a><a href="#projetos">Projetos</a><a href="#arquitetura">Stack</a><a href="#metodo">Método</a><a href="#sobre">Sobre</a><a href="#contato">Contato</a></div>
     </div>
   </nav>
 
   <main>
-    <!-- Apresentação -->
-    <header id="top" class="relative mx-auto grid max-w-6xl items-center gap-12 overflow-hidden px-5 py-16 sm:px-6 md:py-20 lg:grid-cols-2 lg:px-8">
-      <div class="hero-orb -left-32 top-4 h-72 w-72" aria-hidden="true"></div><div class="hero-orb orb-two right-0 top-24 h-96 w-96" aria-hidden="true"></div>
-      <div class="relative z-10" data-reveal="left">
-        <span class="inline-flex rounded-full border accent-border accent-soft px-4 py-2 text-xs font-bold tracking-wider accent-text">
-          {{ site.role_badge }}
-        </span>
-
-        <h1 class="mt-5 text-4xl font-bold leading-tight tracking-tight sm:text-5xl" style="font-family:'Space Grotesk',sans-serif">
-          Transformando ideias em paginas profissionais <span class="accent-text">{{ site.name }}</span>
-        </h1>
-        <h2 class="mt-3 text-2xl font-semibold leading-tight sm:text-3xl" style="font-family:'Space Grotesk',sans-serif">
-          <span id="typed-headline" data-default="{{ site.headline }}">{{ site.headline }}</span><span class="typing-caret" aria-hidden="true"></span>
-        </h2>
-        <p class="mt-4 mb-7 max-w-lg text-base leading-relaxed text-[#9796AC]">
-          {{ site.intro }}
-        </p>
-
-        <div class="mb-9 flex flex-wrap gap-3">
-          <a href="#projetos" class="magnetic inline-flex items-center gap-2 rounded-full accent-gradient px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-950/20 transition hover:shadow-violet-500/20">
-            Ver meu trabalho
-            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M7 17 17 7M7 7h10v10" />
-            </svg>
-          </a>
-
-          {% if site.resume_url %}
-          <a href="{{ site.resume_url }}" download class="inline-flex items-center gap-2 rounded-full border border-[#262635] px-6 py-3.5 text-sm font-semibold text-white transition hover:border-violet-400/50 hover:bg-white/5">
-            Baixar currículo
-            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v4h14v-4" />
-            </svg>
-          </a>
-          {% else %}
-          <a href="#contato" title="Entre em contato para solicitar o currículo" class="inline-flex items-center gap-2 rounded-full border border-[#262635] px-6 py-3.5 text-sm font-semibold text-white transition hover:border-violet-400/50 hover:bg-white/5">
-            Solicitar currículo
-          </a>
-          {% endif %}
-        </div>
-
-        <p class="mb-3 text-xs font-bold tracking-wider text-[#9796AC]">TECNOLOGIAS QUE UTILIZO</p>
-        <div class="flex flex-wrap gap-2.5" aria-label="Tecnologias">
-          <span title="HTML5" class="tech-chip flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold text-[#0A0A12]" style="background:#E8703A">H5</span>
-          <span title="CSS3" class="tech-chip flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold text-[#0A0A12]" style="background:#4C9BE0">C3</span>
-          <span title="JavaScript" class="tech-chip flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold text-[#0A0A12]" style="background:#F0CB3A">JS</span>
-          <span title="TypeScript" class="tech-chip flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold text-[#0A0A12]" style="background:#4C7FDB">TS</span>
-          <span title="React" class="tech-chip flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold text-[#0A0A12]" style="background:#56D2E0">RX</span>
-          <span title="Node.js" class="tech-chip flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold text-[#0A0A12]" style="background:#4CAE5A">ND</span>
-          <span title="Git" class="tech-chip flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold text-[#0A0A12]" style="background:#E15A3E">GT</span>
-        </div>
-      </div>
-
-      <div class="relative mx-auto hidden h-[400px] w-full max-w-lg md:block" data-reveal="right" data-parallax>
-        <div class="absolute inset-8 rounded-full accent-soft blur-3xl"></div>
-        <div class="floating-card absolute inset-x-12 inset-y-10 flex flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-[#262635] bg-[#15151F]/80 p-5">
-          {% if site.photo_url %}
-          <img src="{{ site.photo_url }}" alt="Foto de {{ site.name }}" class="h-64 w-64 rounded-2xl object-cover shadow-2xl shadow-black/40">
-          {% else %}
-          <svg viewBox="0 0 24 24" class="h-12 w-12 text-[#9796AC]" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-            <path stroke-linejoin="round" d="M4 7a2 2 0 0 1 2-2h3l2-2h2l2 2h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Z" />
-            <circle cx="12" cy="13" r="3.2" />
-          </svg>
-          <span class="text-sm text-[#9796AC]">Adicione sua foto em app.py</span>
-          {% endif %}
-        </div>
-
-        <div class="absolute top-2 right-0 w-48 rounded-2xl border border-[#262635] bg-[#15151F] p-4 shadow-2xl shadow-black/50">
-          <div class="mb-2 flex items-center justify-between">
-            <span class="flex items-center gap-2 text-xs text-[#9796AC]">
-              <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16" />
-              </svg>
-              Code
-            </span>
-            <span class="h-2 w-2 rounded-full bg-green-400"></span>
+    <!-- HERO / 01 -->
+    <header id="inicio" class="hero-shell section-wrap">
+      <div class="hero-glow -left-36 top-24" aria-hidden="true"></div><div class="hero-grid" aria-hidden="true"></div>
+      <div class="relative z-10 grid items-center gap-10 lg:grid-cols-[1.03fr_.97fr] lg:gap-14">
+        <div class="max-w-[670px]">
+          <div class="reveal mb-7 flex items-center gap-3" data-hero>
+            <span class="status-pulse"></span><span class="mono text-[10px] tracking-[.2em] text-[#aaa5b6]">{{ site.role_badge }}</span>
           </div>
-          <div class="font-mono text-xs leading-6 text-[#9796AC]">
-            <div><span class="accent-text">const</span> dev = {</div>
-            <div class="pl-3">nome: <span class="text-emerald-300">"{{ site.name }}"</span>,</div>
-            <div class="pl-3">skills: [<span class="text-emerald-300">"HTML"</span>, <span class="text-emerald-300">"JS"</span>],</div>
-            <div class="pl-3">foco: <span class="text-emerald-300">"soluções web"</span></div>
-            <div>};</div>
+          <h1 class="display reveal text-[clamp(3.2rem,7.1vw,6.5rem)] font-semibold leading-[.98]" data-hero>
+            Código com <span class="accent">intenção.</span><br><span class="outline-text">Ideias em movimento.</span>
+          </h1>
+          <div class="reveal mt-7 flex items-center gap-3" data-hero>
+            <span class="h-px w-8 bg-violet-300/70"></span><p class="mono text-xs text-[#c4bfd0]" id="role-rotator" data-roles='{{ site.roles|tojson|forceescape }}'>{{ site.roles[0] if site.roles else site.headline }}</p>
+          </div>
+          <p class="reveal mt-6 max-w-xl text-[15px] leading-8 text-[#aaa5b6]" data-hero>{{ site.intro }}</p>
+          <div class="reveal mt-8 flex flex-wrap gap-3" data-hero>
+            <a href="#projetos" class="magnetic inline-flex items-center gap-3 rounded-full accent-bg px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-violet-950/30 transition hover:shadow-violet-500/25">Explorar projetos <span>↗</span></a>
+            <a href="#contato" class="magnetic inline-flex items-center gap-3 rounded-full border border-white/15 px-6 py-3.5 text-sm font-semibold text-white transition hover:border-white/35 hover:bg-white/[.04]">Iniciar conversa <span class="accent">↗</span></a>
+          </div>
+          <div class="reveal mt-12 flex flex-wrap items-center gap-x-7 gap-y-3 border-t border-white/10 pt-6" data-hero>
+            <div><p class="mono text-[9px] tracking-[.16em] text-[#777286]">FOCO</p><p class="mt-1 text-xs text-[#d4d0df]">Web · Interação · Produto</p></div>
+            <div class="hidden h-8 w-px bg-white/10 sm:block"></div>
+            <div><p class="mono text-[9px] tracking-[.16em] text-[#777286]">STACK</p><p class="mt-1 text-xs text-[#d4d0df]">Python · JavaScript · Tailwind</p></div>
+            <div class="hidden h-8 w-px bg-white/10 sm:block"></div>
+            <div><p class="mono text-[9px] tracking-[.16em] text-[#777286]">STATUS</p><p class="mt-1 flex items-center gap-2 text-xs text-[#d4d0df]"><span class="status-pulse"></span> Aberto a ideias</p></div>
           </div>
         </div>
+
+        <div class="hero-visual reveal" data-hero data-parallax>
+          <div class="code-window" id="hero-window">
+            <div class="code-top"><span class="code-dot"></span><span class="code-dot"></span><span class="code-dot"></span><span class="mono ml-3 text-[10px] text-[#777286]">portfolio.py</span><span class="ml-auto mono text-[9px] text-[#777286]">LIVE PREVIEW</span></div>
+            <div class="code-body">
+              <span class="code-line"><span class="code-no">01</span><span class="code-purple">class</span> <span class="code-yellow">Experience</span>:</span>
+              <span class="code-line"><span class="code-no">02</span>  <span class="code-purple">def</span> <span class="code-blue">__init__</span>(self):</span>
+              <span class="code-line"><span class="code-no">03</span>    self.idea = <span class="code-green">"sua ideia"</span></span>
+              <span class="code-line"><span class="code-no">04</span>    self.design = <span class="code-green">"com intenção"</span></span>
+              <span class="code-line"><span class="code-no">05</span>    self.code = <span class="code-green">"bem construído"</span></span>
+              <span class="code-line"><span class="code-no">06</span></span>
+              <span class="code-line"><span class="code-no">07</span>  <span class="code-purple">def</span> <span class="code-blue">build</span>(self):</span>
+              <span class="code-line"><span class="code-no">08</span>    <span class="code-purple">return</span> <span class="code-yellow">Product</span>(</span>
+              <span class="code-line"><span class="code-no">09</span>      clarity=<span class="code-green">True</span>,</span>
+              <span class="code-line"><span class="code-no">10</span>      motion=<span class="code-green">"fluid"</span>,</span>
+              <span class="code-line"><span class="code-no">11</span>      purpose=<span class="code-green">"real value"</span></span>
+              <span class="code-line"><span class="code-no">12</span>    )<span class="accent">▍</span></span>
+            </div>
+            <div class="absolute bottom-4 right-5 flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5"><span class="h-1.5 w-1.5 rounded-full bg-emerald-300"></span><span class="mono text-[9px] text-emerald-200">BUILD SUCCESSFUL</span></div>
+          </div>
+          <div class="floating-note note-one"><p class="mono text-[9px] tracking-widest text-[#777286]">DESIGN SYSTEM</p><div class="mt-2 flex gap-1.5"><i class="h-5 w-5 rounded-md" style="background:var(--accent)"></i><i class="h-5 w-5 rounded-md bg-[#c4b5fd]"></i><i class="h-5 w-5 rounded-md bg-[#70e1aa]"></i><i class="h-5 w-5 rounded-md bg-[#f4d39b]"></i></div></div>
+          <div class="floating-note note-two"><p class="mono text-[9px] tracking-widest text-[#777286]">INTERAÇÃO</p><p class="display mt-1 text-xl font-semibold">01 <span class="accent">→</span> ∞</p></div>
+        </div>
       </div>
+      <div class="scroll-cue" aria-hidden="true"><span>SCROLL PARA EXPLORAR</span><span class="scroll-cue-line"></span></div>
     </header>
 
-    <!-- Sobre -->
-    <section id="sobre" class="border-y border-[#262635] bg-[#101018]/90 py-20 md:py-24">
-      <div class="mx-auto grid max-w-6xl items-center gap-12 px-5 sm:px-6 md:grid-cols-2 lg:px-8">
-        <div data-reveal="left">
-          <span class="mb-3 block text-xs font-bold tracking-widest accent-text">SOBRE MIM</span>
-          <h2 class="mb-4 text-3xl font-bold leading-tight" style="font-family:'Space Grotesk',sans-serif">{{ site.about_title }}</h2>
-          <p class="mb-6 max-w-xl text-base leading-relaxed text-[#9796AC]">{{ site.about_text }}</p>
-          <a href="#projetos" class="inline-flex items-center gap-2 rounded-full border border-[#262635] px-6 py-3.5 text-sm font-semibold transition hover:border-violet-400/50 hover:bg-white/5">
-            {{ site.about_link_text }}
-          </a>
+    <!-- FRENTES / 02 -->
+    <section id="frentes" class="surface-section py-24 md:py-28">
+      <div class="section-wrap">
+        <div class="grid gap-8 md:grid-cols-[.78fr_1.22fr] md:items-end">
+          <div class="reveal"><span class="section-kicker">02 / O QUE EU CULTIVO</span><h2 class="section-title mt-5">Quatro frentes.<br><span class="accent">Uma intenção.</span></h2></div>
+          <p class="reveal max-w-xl text-sm leading-8 text-[#aaa5b6] md:justify-self-end">Do primeiro esboço à última interação, cada camada precisa trabalhar em conjunto. Estas são as áreas que orientam meus estudos, experimentos e projetos.</p>
         </div>
-
-        <div class="grid grid-cols-1 gap-7 sm:grid-cols-2" data-reveal="right">
-          {% for stat in site.stats %}
-          <div class="flex items-center gap-4">
-            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl accent-soft accent-text">
-              {% if stat.icon == 'calendar' %}
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
-              {% elif stat.icon == 'code' %}
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 4l-4 16"/></svg>
-              {% elif stat.icon == 'smile' %}
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>
-              {% else %}
-              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg>
-              {% endif %}
-            </div>
-            <div>
-              <div class="text-2xl font-bold" data-counter style="font-family:'Space Grotesk',sans-serif">{{ stat.value }}</div>
-              <div class="text-sm text-[#9796AC]">{{ stat.label }}</div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-    </section>
-
-    <!-- Habilidades -->
-    <section id="habilidades" class="py-20 md:py-24">
-      <div class="mx-auto max-w-6xl px-5 sm:px-6 lg:px-8">
-        <div class="mx-auto mb-12 max-w-2xl text-center" data-reveal="up">
-          <span class="mb-3 block text-xs font-bold tracking-widest accent-text">MINHAS HABILIDADES</span>
-          <h2 class="text-3xl font-bold" style="font-family:'Space Grotesk',sans-serif">Tecnologias que domino</h2>
-        </div>
-
-        <div class="grid grid-cols-1 gap-8 md:grid-cols-3" data-reveal="up">
-          {% for group in site.skills %}
-          <div class="flex flex-col gap-7">
-            {% for skill in group %}
-            <div>
-              <div class="flex items-center justify-between gap-3 text-sm font-semibold">
-                <span class="flex items-center">
-                  <span class="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-bold text-[#0A0A12]" style="background-color:{{ skill.color }}">{{ skill.short }}</span>
-                  {{ skill.name }}
-                </span>
-                <span class="shrink-0 text-[#9796AC]">{{ skill.level }}%</span>
-              </div>
-              <div class="mt-2 h-2 overflow-hidden rounded-full bg-[#262635]" data-skill-track>
-                <div class="h-full rounded-full accent-gradient" style="width:{{ skill.level }}%"></div>
-              </div>
-            </div>
-            {% endfor %}
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-    </section>
-
-    <!-- Projetos -->
-    <section id="projetos" class="bg-[#101018] py-20 md:py-24">
-      <div class="mx-auto max-w-6xl px-5 sm:px-6 lg:px-8">
-        <div class="mx-auto mb-12 max-w-2xl text-center" data-reveal="up">
-          <span class="mb-3 block text-xs font-bold tracking-widest accent-text">PROJETOS EM DESTAQUE</span>
-          <h2 class="text-3xl font-bold" style="font-family:'Space Grotesk',sans-serif">Alguns dos meus trabalhos recentes</h2>
-        </div>
-
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" data-reveal="up">
-          {% for project in site.projects %}
-          <article data-tilt class="project-card overflow-hidden rounded-2xl border border-[#262635] bg-[#15151F] transition duration-300 hover:border-violet-400/40 hover:shadow-xl hover:shadow-black/20">
-            <div class="project-visual relative h-44 overflow-hidden" style="background:{{ project.gradient }}">
-              <span class="absolute top-3 left-3 rounded-full bg-[#0A0A12]/60 px-3 py-1 text-xs font-bold text-white">{{ project.number }}</span>
-              {% if project.kind == 'store' %}
-              <div class="absolute inset-9 rounded-xl bg-white/15"></div>
-              <div class="absolute top-12 left-12 h-4 w-20 rounded-md bg-white/40"></div>
-              <div class="absolute right-14 bottom-10 left-14 h-7 rounded-lg bg-white/15"></div>
-              {% elif project.kind == 'tasks' %}
-              <div class="absolute top-10 right-7 left-7 h-4 rounded-md bg-violet-400/35"></div>
-              <div class="absolute top-16 right-16 left-7 h-4 rounded-md bg-violet-400/20"></div>
-              <div class="absolute top-24 right-20 left-7 h-4 rounded-md bg-violet-400/20"></div>
-              {% else %}
-              <svg viewBox="0 0 220 70" class="absolute right-6 bottom-7 left-6 h-[70px] w-[calc(100%-3rem)]" fill="none" aria-hidden="true">
-                <polyline points="0,55 30,42 60,48 90,22 120,30 150,10 180,18 220,2" stroke="#A78BFA" stroke-width="2.5" />
-              </svg>
-              {% endif %}
-            </div>
-
-            <div class="p-6">
-              <h3 class="mb-2 text-lg font-bold" style="font-family:'Space Grotesk',sans-serif">{{ project.name }}</h3>
-              <p class="mb-4 text-sm leading-relaxed text-[#9796AC]">{{ project.description }}</p>
-              {% if project.url and project.url != '#' %}
-              <a href="{{ project.url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-sm font-semibold accent-text transition hover:text-violet-300">
-                Ver projeto
-                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>
-              </a>
-              {% else %}
-              <span class="text-sm font-semibold text-[#9796AC]">Projeto em breve</span>
-              {% endif %}
-            </div>
+        <div class="mt-14 grid gap-4 sm:grid-cols-2">
+          {% for service in site.services %}
+          <article class="service-card reveal p-6 sm:p-8" data-spotlight>
+            <div class="relative z-[1] flex items-start justify-between"><span class="mono text-[10px] tracking-widest text-[#777286]">{{ service.number }} / {{ service.eyebrow }}</span><span class="service-icon">{{ service.symbol }}</span></div>
+            <h3 class="display relative z-[1] mt-9 text-2xl font-semibold">{{ service.title }}</h3>
+            <p class="relative z-[1] mt-3 max-w-lg text-sm leading-7 text-[#a8a4b6]">{{ service.text }}</p>
+            <div class="relative z-[1] mt-6 flex flex-wrap gap-2">{% for tag in service.tags %}<span class="tag">{{ tag }}</span>{% endfor %}</div>
           </article>
           {% endfor %}
         </div>
       </div>
     </section>
 
-    <!-- Contato -->
-    <section id="contato" class="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-5 py-20 sm:px-6 md:py-24 lg:grid-cols-3 lg:px-8">
-      <div>
-        <span class="mb-3 block text-xs font-bold tracking-widest accent-text">VAMOS TRABALHAR JUNTOS</span>
-        <h2 class="mb-4 text-3xl font-bold leading-tight" style="font-family:'Space Grotesk',sans-serif">{{ site.contact_title }}</h2>
-        <p class="mb-6 text-sm leading-relaxed text-[#9796AC]">{{ site.contact_text }}</p>
-        <a href="mailto:{{ site.email }}" class="magnetic inline-flex items-center gap-2 rounded-full accent-gradient px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-violet-500/20">
-          Entrar em contato
-          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>
-        </a>
+    <!-- BEFORE / AFTER: demonstração conceitual de evolução de interface. -->
+    <section id="evolucao" class="py-20 md:py-24">
+      <div class="section-wrap grid gap-10 lg:grid-cols-[.75fr_1.25fr] lg:items-center">
+        <div class="reveal"><span class="section-kicker">EXPERIÊNCIA / INTERAÇÃO</span><h2 class="section-title mt-5">Do rascunho<br>à <span class="accent">experiência.</span></h2><p class="mt-5 max-w-md text-sm leading-8 text-[#aaa5b6]">Arraste o controle para comparar uma estrutura inicial com uma interface mais refinada. É um estudo visual demonstrativo, não uma captura de projeto de cliente.</p><div class="mt-8 flex items-center justify-between gap-4"><label for="compare-range" class="mono text-[10px] tracking-widest text-[#9c96aa]">ANTES <span class="mx-2 text-violet-300">↔</span> DEPOIS</label><output id="compare-output" class="mono text-xs accent">50%</output></div><input id="compare-range" type="range" min="0" max="100" value="50" class="mt-3 w-full cursor-ew-resize accent-violet-400" aria-label="Comparar interface antes e depois"></div>
+        <div class="comparison-stage reveal" id="comparison-stage" data-spotlight>
+          <div class="comparison-after absolute inset-0 overflow-hidden rounded-[20px]">
+            <div class="h-full w-full bg-[radial-gradient(circle_at_78%_15%,rgba(139,92,246,.35),transparent_34%),linear-gradient(145deg,#1d1a2a,#0c0c13)] p-5 sm:p-8">
+              <div class="flex items-center justify-between border-b border-white/10 pb-4"><span class="display text-sm font-bold">studio<span class="accent">.digital</span></span><div class="hidden gap-4 sm:flex"><i class="h-2 w-10 rounded bg-white/30"></i><i class="h-2 w-10 rounded bg-white/30"></i><i class="h-2 w-10 rounded bg-white/30"></i></div><span class="rounded-full accent-bg px-3 py-2 text-[9px] font-bold">COMEÇAR ↗</span></div>
+              <div class="grid h-[calc(100%-58px)] items-center gap-5 sm:grid-cols-[1.1fr_.9fr]"><div><span class="mono text-[8px] tracking-[.2em] accent">DESIGN COM PROPÓSITO</span><h3 class="display mt-3 text-3xl font-semibold leading-[1.04] sm:text-4xl">Ideias que ganham <span class="accent">forma.</span></h3><p class="mt-3 max-w-xs text-[10px] leading-5 text-[#bdb7ca]">Uma interface clara, visual consistente e ações fáceis de entender.</p><div class="mt-5 h-8 w-28 rounded-full accent-bg"></div></div><div class="relative hidden h-48 sm:block"><div class="absolute inset-5 rotate-6 rounded-2xl border border-violet-200/20 bg-violet-300/10 backdrop-blur-xl"></div><div class="absolute inset-0 rounded-2xl border border-white/15 bg-[#151322]/85 p-4 shadow-xl"><div class="mb-4 flex justify-between"><i class="h-2 w-12 rounded bg-white/30"></i><i class="h-2 w-6 rounded bg-violet-300/60"></i></div><div class="grid grid-cols-2 gap-2"><div class="h-16 rounded-lg bg-violet-300/20"></div><div class="h-16 rounded-lg bg-white/10"></div></div><div class="mt-3 h-2 w-2/3 rounded bg-white/25"></div><div class="mt-2 h-2 w-1/2 rounded bg-white/15"></div><div class="mt-4 h-7 rounded-lg bg-violet-400/60"></div></div></div></div>
+            </div>
+          </div>
+          <div class="comparison-before absolute inset-0 overflow-hidden rounded-[20px]" id="comparison-before">
+            <div class="h-full w-full bg-[#24232a] p-5 sm:p-8"><div class="flex items-center justify-between border-b border-white/15 pb-4"><span class="mono text-xs text-[#d2cfda]">wireframe_v01</span><div class="flex gap-1"><i class="h-2 w-2 rounded-full bg-white/30"></i><i class="h-2 w-2 rounded-full bg-white/30"></i><i class="h-2 w-2 rounded-full bg-white/30"></i></div></div><div class="grid h-[calc(100%-58px)] items-center gap-5 sm:grid-cols-[1.1fr_.9fr]"><div><div class="mb-3 h-2 w-24 rounded bg-white/20"></div><div class="h-7 w-4/5 rounded bg-white/25"></div><div class="mt-2 h-7 w-3/5 rounded bg-white/20"></div><div class="mt-4 h-2 w-full rounded bg-white/10"></div><div class="mt-2 h-2 w-4/5 rounded bg-white/10"></div><div class="mt-5 h-9 w-28 rounded border border-dashed border-white/25"></div></div><div class="hidden sm:block"><div class="grid grid-cols-2 gap-2"><div class="h-20 border border-dashed border-white/25 bg-white/[.04]"></div><div class="h-20 border border-dashed border-white/25 bg-white/[.04]"></div></div><div class="mt-3 h-10 border border-dashed border-white/20"></div><div class="mt-2 h-10 border border-dashed border-white/20"></div></div></div></div>
+          </div>
+          <div id="comparison-divider" class="comparison-divider" style="left:50%"><span>↔</span></div>
+          <span class="absolute bottom-4 left-4 z-20 rounded-full bg-black/45 px-3 py-1.5 mono text-[9px] tracking-widest text-white">WIREFRAME</span><span class="absolute bottom-4 right-4 z-20 rounded-full bg-black/45 px-3 py-1.5 mono text-[9px] tracking-widest text-white">UI REFINADA</span>
+        </div>
       </div>
+    </section>
 
-      <div data-reveal="up" class="rounded-2xl border border-[#262635] bg-[#15151F] p-6">
-        <div class="mb-2 text-3xl accent-text" style="font-family:'Space Grotesk',sans-serif">“</div>
-        <p class="mb-6 text-sm italic leading-relaxed">{{ site.testimonial }}</p>
-        <div class="flex items-center gap-3">
-          <span class="h-10 w-10 shrink-0 rounded-full bg-[#2A2A3D]" aria-hidden="true"></span>
-          <div>
-            <div class="text-sm font-semibold">{{ site.testimonial_author }}</div>
-            <div class="text-xs text-[#9796AC]">{{ site.testimonial_project }}</div>
+    <!-- COLLECTION / 03 · SITES PUBLICADOS -->
+    <section id="projetos" class="py-24 md:py-28">
+      <div class="section-wrap">
+        <div class="flex flex-col justify-between gap-7 md:flex-row md:items-end">
+          <div class="reveal"><span class="section-kicker">03 / EXPERIÊNCIAS ONLINE</span><h2 class="section-title mt-5">Projetos <span class="accent">no ar.</span></h2></div>
+          <p class="reveal max-w-md text-sm leading-8 text-[#aaa5b6]">Conheça os sites e sistemas que desenvolvi. Clique em qualquer projeto para abrir diretamente a versão publicada — sem repositórios, páginas técnicas ou etapas extras.</p>
+        </div>
+
+        <div class="reveal mt-8 flex flex-wrap items-center justify-between gap-3">
+          <span class="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/[.06] px-4 py-2 mono text-[10px] tracking-wider text-emerald-200"><i class="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,.8)]"></i>{{ github_projects|length }} SITES COM DOMÍNIO CADASTRADO</span>
+          <span class="mono text-[9px] tracking-wider text-[#827b91]">{{ github_sync_label }}</span>
+        </div>
+
+        {% if github_projects %}
+        <div class="mt-7 grid gap-5 md:grid-cols-2 lg:grid-cols-3" id="project-grid">
+          {% for project in github_projects %}
+          <a href="{{ project.homepage_url }}" target="_blank" rel="noopener noreferrer" class="project-card reveal group block overflow-hidden text-left no-underline" data-project-card data-category="{{ project.category|lower }}" data-spotlight aria-label="Abrir o site {{ project.name }} em nova aba">
+            <div class="github-repo-art" data-project-gradient="{{ project.gradient }}">
+              <div class="github-code-window">
+                <div class="mb-4 flex items-center justify-between"><div class="flex gap-1.5"><i class="h-2.5 w-2.5 rounded-full bg-rose-300/70"></i><i class="h-2.5 w-2.5 rounded-full bg-amber-200/70"></i><i class="h-2.5 w-2.5 rounded-full bg-emerald-300/70"></i></div><span class="mono text-[8px] tracking-widest text-white/45">LIVE EXPERIENCE</span></div>
+                <div class="mono text-[13px] font-semibold text-white">{{ project.name }}</div>
+                <div class="github-code-line"></div><div class="github-code-line"></div><div class="github-code-line"></div><div class="github-code-line"></div>
+                <div class="mt-4 flex items-center justify-between"><span class="mono text-[9px] text-violet-200">VERSÃO WEB</span><span class="mono text-[8px] text-emerald-200">● URL PÚBLICA</span></div>
+              </div>
+              <div class="absolute left-4 top-4 z-[2]"><span class="rounded-full border border-white/15 bg-black/30 px-3 py-1.5 mono text-[9px] tracking-wider text-white">{{ '%02d'|format(loop.index) }} / WEB</span></div>
+              <span class="absolute bottom-4 right-4 z-[2] rounded-full bg-black/40 px-3 py-1.5 mono text-[9px] text-white">↗ ABRIR SITE</span>
+            </div>
+            <div class="p-5 sm:p-6">
+              <div class="flex items-start justify-between gap-4"><div class="min-w-0"><h3 class="display break-words text-xl font-semibold text-white">{{ project.name }}</h3><p class="mt-2 min-h-[72px] text-[13px] leading-6 text-[#a8a4b6]">{{ project.description }}</p></div><span class="project-arrow shrink-0 text-lg text-white" aria-hidden="true">↗</span></div>
+              <div class="mt-4 flex flex-wrap items-center gap-2"><span class="tag">{{ project.domain }}</span><span class="tag">Link direto</span></div>
+              <div class="mt-5 flex items-center justify-between gap-3 border-t border-white/[.08] pt-4">
+                <span class="mono truncate text-[9px] text-[#8e879e]">{{ project.domain }}</span>
+                <span class="github-project-btn primary shrink-0">Visitar projeto <span>↗</span></span>
+              </div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="mt-8 rounded-2xl border border-white/10 bg-white/[.02] p-8 text-sm leading-7 text-[#a8a4b6]">
+          <span class="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-violet-400/10 text-xl text-violet-200">↗</span>
+          <h3 class="display mb-2 text-lg font-semibold text-white">Novos projetos em publicação.</h3>
+          <p>Assim que um projeto tiver um domínio público configurado, ele aparecerá aqui com acesso direto ao site. Nenhum visitante será enviado para o GitHub ou para um endereço inventado.</p>
+        </div>
+        {% endif %}
+        <p class="mt-7 max-w-2xl text-center text-[10px] leading-6 text-[#777286]">{{ github_sync_note }}</p>
+      </div>
+    </section>
+
+    <!-- ARCHITECTURE / SKILLS -->
+    <section id="arquitetura" class="surface-section py-24 md:py-28">
+      <div class="section-wrap">
+        <div class="mb-14 grid gap-8 md:grid-cols-[1fr_.85fr] md:items-end"><div class="reveal"><span class="section-kicker">04 / ARQUITETURA</span><h2 class="section-title mt-5">Boas camadas.<br><span class="accent">Conexões claras.</span></h2></div><p class="reveal max-w-lg text-sm leading-8 text-[#aaa5b6]">Interface, lógica e dados precisam conversar. Organizo as ferramentas em torno do que cada parte da experiência precisa resolver.</p></div>
+        <div class="grid items-center gap-9 lg:grid-cols-[.9fr_1.1fr]">
+          <div class="architecture-board reveal" aria-label="Diagrama de camadas de uma aplicação"><svg class="architecture-lines" viewBox="0 0 520 420" fill="none" aria-hidden="true"><path class="architecture-path" d="M260 80 105 205 260 340 415 205Z" stroke="rgba(196,181,253,.5)" stroke-width="1.5" stroke-dasharray="6 8"/><path class="architecture-path" d="M105 205H415M260 80V340" stroke="rgba(255,255,255,.15)" stroke-dasharray="3 8"/><circle cx="260" cy="205" r="88" stroke="rgba(139,92,246,.3)"/><circle cx="260" cy="205" r="122" stroke="rgba(255,255,255,.08)" stroke-dasharray="2 7"/></svg><div class="architecture-center"><span class="mono text-[9px] tracking-widest">CORE</span><strong class="display text-2xl">MODULE</strong><span class="mono text-[8px] text-[#aaa5b6]">EXPERIENCE</span></div><div class="architecture-node node-top"><span class="accent">◈</span><b>Interface</b><small>UI / UX</small></div><div class="architecture-node node-left"><span class="accent">⌘</span><b>Lógica</b><small>Backend</small></div><div class="architecture-node node-right"><span class="accent">⌁</span><b>Dados</b><small>Integração</small></div><div class="architecture-node node-bottom"><span class="accent">✳</span><b>Entrega</b><small>Deploy</small></div><span class="architecture-label mono">SYSTEM MAP · 01</span></div>
+          <div class="reveal">
+            <div class="mb-6 flex items-end justify-between gap-4"><div><span class="mono text-[9px] tracking-widest text-[#777286]">STACK DE DESENVOLVIMENTO</span><h3 class="display mt-2 text-2xl font-semibold">Ferramentas que uso.</h3></div><span class="mono text-[9px] text-[#777286]">SKILL MAP</span></div>
+            <div class="grid gap-6 sm:grid-cols-2">{% for group in site.skills %}<div class="space-y-5">{% for skill in group %}<div class="skill-item"><div class="mb-2 flex items-center justify-between gap-3"><span class="flex items-center gap-2 text-xs font-semibold"><i class="skill-icon grid h-6 w-6 place-items-center rounded-md text-[9px] font-bold text-[#0b0b12] not-italic" data-skill-color="{{ skill.color }}">{{ skill.short }}</i>{{ skill.name }}</span><span class="mono text-[9px] text-[#918ba0]">{{ skill.level }}%</span></div><div class="skill-track h-1.5 overflow-hidden rounded-full bg-white/10"><div class="skill-fill h-full rounded-full" data-level="{{ skill.level }}" style="width:0%;background:linear-gradient(90deg,var(--accent),var(--accent-light))"></div></div></div>{% endfor %}</div>{% endfor %}</div>
+            <p class="mt-7 text-[10px] leading-5 text-[#777286]">Os percentuais são autoavaliações configuráveis no app.py; ajuste-os para refletir com precisão seu domínio atual.</p>
           </div>
         </div>
       </div>
+    </section>
 
-      <div>
-        <span class="mb-3 block text-xs font-bold tracking-widest accent-text">REDES SOCIAIS</span>
-        <div class="mb-5 flex flex-wrap gap-2.5">
-          {% for social in site.socials %}
-          {% if social.url and social.url != '#' %}
-          <a aria-label="{{ social.name }}" href="{{ social.url }}" target="_blank" rel="noopener noreferrer" class="flex h-10 w-10 items-center justify-center rounded-xl border border-[#262635] bg-[#15151F] text-xs font-bold text-[#9796AC] transition hover:border-violet-400/50 hover:accent-text">{{ social.label }}</a>
-          {% else %}
-          <span aria-label="{{ social.name }}" title="Adicione o link de {{ social.name }} no app.py" class="flex h-10 w-10 items-center justify-center rounded-xl border border-[#262635] bg-[#15151F] text-xs font-bold text-[#9796AC]">{{ social.label }}</span>
-          {% endif %}
+    <!-- METHOD / 04 -->
+    <section id="metodo" class="surface-section py-24 md:py-28">
+      <div class="section-wrap">
+        <div class="mb-14 max-w-2xl reveal"><span class="section-kicker">04 / MÉTODO</span><h2 class="section-title mt-5">Do primeiro insight<br><span class="accent">ao último detalhe.</span></h2><p class="mt-5 max-w-xl text-sm leading-8 text-[#aaa5b6]">Um processo simples para manter o foco no problema, validar a direção e construir com intenção.</p></div>
+        <div class="process-layout">
+          <div class="process-visual reveal" aria-hidden="true"><div class="process-orbit"></div><div class="process-core" id="process-core">01</div><div class="absolute bottom-7 left-7 right-7 flex items-end justify-between"><div><p class="mono text-[9px] tracking-widest text-[#777286]">ETAPA ATUAL</p><p class="display mt-1 text-2xl font-semibold" id="process-name">Entender</p></div><span class="mono text-[10px] text-[#777286]">MODULE / PROCESS</span></div><div class="absolute right-7 top-7 mono text-[9px] tracking-widest text-[#777286]">FLOW 0<span id="process-current">1</span> / {{ '%02d'|format(site.process|length) }}</div></div>
+          <div class="process-list relative pl-1" id="process-list"><span class="process-progress" id="process-progress"></span>
+            {% for step in site.process %}<article class="process-step reveal {% if loop.first %}is-active{% endif %}" data-process-step data-step-number="{{ step.number }}" data-step-name="{{ step.name }}"><div class="mono text-[9px] tracking-[.18em] accent">{{ step.meta }} <span class="text-[#777286]">/ {{ step.number }} — {{ '%02d'|format(site.process|length) }}</span></div><h3 class="display mt-3 text-2xl font-semibold">{{ step.title }}</h3><p class="mt-3 max-w-lg text-sm leading-7 text-[#a8a4b6]">{{ step.text }}</p></article>{% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT / 05 -->
+    <section id="sobre" class="py-24 md:py-28">
+      <div class="section-wrap grid gap-14 lg:grid-cols-[.95fr_1.05fr] lg:items-center">
+        <div class="reveal">
+          <span class="section-kicker">05 / O ATELIÊ</span>
+          <h2 class="section-title mt-5">Construir melhor<br>começa por <span class="accent">entender.</span></h2>
+          <p class="mt-7 max-w-xl text-sm leading-8 text-[#aaa5b6]">{{ site.about_text }}</p>
+          <a href="#contato" class="magnetic mt-8 inline-flex items-center gap-3 border-b border-violet-300/40 pb-2 text-sm font-semibold transition hover:border-violet-200">{{ site.about_link_text }} <span class="accent">↗</span></a>
+          <div class="mt-12 grid grid-cols-3 gap-4 border-t border-white/10 pt-7">
+            {% for stat in site.stats %}<div><p class="display text-3xl font-semibold accent" data-counter>{{ stat.value }}</p><p class="mt-2 max-w-[120px] text-[10px] leading-5 text-[#898498]">{{ stat.label }}</p></div>{% endfor %}
+          </div>
+        </div>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {% for principle in site.principles %}<article class="principle-card reveal p-6" data-spotlight><span class="relative z-[1] mono text-[10px] tracking-widest accent">{{ principle.number }}</span><h3 class="display relative z-[1] mt-8 text-xl font-semibold">{{ principle.title }}</h3><p class="relative z-[1] mt-3 text-xs leading-6 text-[#a8a4b6]">{{ principle.text }}</p></article>{% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- TOOL MARQUEE / 06 -->
+    <section class="py-12">
+      <div class="section-wrap mb-6 flex items-end justify-between gap-5"><div><span class="section-kicker">06 / FERRAMENTAS</span><h2 class="display mt-3 text-2xl font-semibold">Tecnologias em movimento.</h2></div><span class="mono hidden text-[9px] tracking-widest text-[#777286] sm:block">STACK / TOOLKIT</span></div>
+      <div class="marquee" aria-label="Tecnologias utilizadas"><div class="marquee-track">{% for repeat in range(2) %}{% for tech in site.tech_stack %}<span class="marquee-item">{{ tech }} <b class="marquee-star">✳</b></span>{% endfor %}{% endfor %}</div></div>
+    </section>
+
+    <!-- REASONS / 07 -->
+    <section class="py-24 md:py-28">
+      <div class="section-wrap">
+        <div class="grid gap-8 md:grid-cols-[1fr_.8fr] md:items-end"><div class="reveal"><span class="section-kicker">07 / DIFERENCIAIS</span><h2 class="section-title mt-5">O cuidado mora<br><span class="accent">nos detalhes.</span></h2></div><p class="reveal max-w-lg text-sm leading-8 text-[#aaa5b6]">Um bom projeto não é apenas bonito na primeira impressão. Ele também precisa ser compreensível, consistente e confiável quando alguém começa a usar.</p></div>
+        <div class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {% for item in [ {'n':'01','t':'Clareza visual','d':'Hierarquia que ajuda a pessoa a entender o que fazer.'}, {'n':'02','t':'Interação com propósito','d':'Movimentos que orientam, respondem e dão contexto.'}, {'n':'03','t':'Estrutura organizada','d':'Componentes e código preparados para manutenção.'}, {'n':'04','t':'Responsividade real','d':'Uma experiência coerente do celular ao desktop.'} ] %}
+          <article class="reason-card reveal p-6" data-spotlight><span class="relative z-[1] mono text-[10px] accent">{{ item.n }}</span><h3 class="display relative z-[1] mt-10 text-xl font-semibold">{{ item.t }}</h3><p class="relative z-[1] mt-3 text-xs leading-6 text-[#a8a4b6]">{{ item.d }}</p></article>
           {% endfor %}
         </div>
+      </div>
+    </section>
 
-        <a href="mailto:{{ site.email }}" class="mb-3 flex items-center gap-3 break-all text-sm text-[#9796AC] transition hover:text-white">
-          <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-          {{ site.email }}
-        </a>
+    <!-- FAQ / 08 -->
+    <section class="surface-section py-24 md:py-28" id="perguntas">
+      <div class="section-wrap grid gap-12 lg:grid-cols-[.7fr_1.3fr]">
+        <div class="reveal"><span class="section-kicker">08 / PERGUNTAS</span><h2 class="section-title mt-5">Antes de<br><span class="accent">começar.</span></h2><p class="mt-5 max-w-sm text-sm leading-7 text-[#aaa5b6]">Algumas respostas para entender como este portfólio funciona e como iniciar uma conversa.</p><a href="#contato" class="mt-7 inline-flex items-center gap-2 text-xs font-semibold text-white hover:text-violet-200">Ainda tem dúvida? Fale comigo <span class="accent">↗</span></a></div>
+        <div class="reveal" id="faq-list">{% for faq in site.faqs %}<article class="faq-item {% if loop.first %}is-open{% endif %}"><button type="button" class="faq-question" aria-expanded="{{ 'true' if loop.first else 'false' }}"><span>{{ '%02d'|format(loop.index) }} <span class="ml-3">{{ faq.question }}</span></span><span class="faq-icon">+</span></button><div class="faq-answer"><div><p>{{ faq.answer }}</p></div></div></article>{% endfor %}</div>
+      </div>
+    </section>
 
-        {% if site.phone_display %}
-        {% if site.phone_link %}
-        <a href="tel:{{ site.phone_link }}" class="flex items-center gap-3 text-sm text-[#9796AC] transition hover:text-white">
-        {% else %}
-        <span class="flex items-center gap-3 text-sm text-[#9796AC]">
-        {% endif %}
-          <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 11.2 18a19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.2 3.2 2 2 0 0 1 4.2 1h3a2 2 0 0 1 2 1.7l.5 2.7a2 2 0 0 1-.6 1.8L7.8 8.5a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 1.8-.6l2.7.5a2 2 0 0 1 1.7 1.8Z"/></svg>
-          {{ site.phone_display }}
-        {% if site.phone_link %}
-        </a>
-        {% else %}
-        </span>
-        {% endif %}
-        {% endif %}
+    <!-- CONTACT / 09 -->
+    <section id="contato" class="py-24 md:py-28">
+      <div class="section-wrap">
+        <div class="contact-shell reveal p-7 sm:p-10 lg:p-14">
+          <div class="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-violet-500/15 blur-[90px]" aria-hidden="true"></div>
+          <div class="relative z-[1] grid gap-12 lg:grid-cols-[.9fr_1.1fr]">
+            <div>
+              <span class="section-kicker">09 / CONTATO</span><h2 class="section-title mt-5">{{ site.contact_title }}</h2><p class="mt-5 max-w-md text-sm leading-8 text-[#aaa5b6]">{{ site.contact_text }}</p>
+              <div class="mt-9 space-y-4">
+                <div class="flex items-center gap-4"><span class="grid h-10 w-10 place-items-center rounded-xl accent-soft accent">↗</span><div><p class="mono text-[9px] tracking-widest text-[#777286]">WHATSAPP</p>{% if site.whatsapp_configured %}<a href="{{ site.whatsapp_contact_path }}" class="mt-1 block text-sm text-white hover:text-violet-200">Abrir conversa</a>{% else %}<span class="mt-1 block text-sm text-[#a8a4b6]">Número ainda não configurado</span>{% endif %}</div></div>
+                <div class="flex items-center gap-4"><span class="grid h-10 w-10 place-items-center rounded-xl accent-soft accent">@</span><div><p class="mono text-[9px] tracking-widest text-[#777286]">E-MAIL</p>{% if site.email %}<a href="{{ site.email_href }}" class="mt-1 block text-sm text-white hover:text-violet-200">{{ site.email }}</a>{% else %}<span class="mt-1 block text-sm text-[#a8a4b6]">E-mail ainda não configurado</span>{% endif %}</div></div>
+              </div>
+              {% if site.socials %}<div class="mt-9 flex flex-wrap gap-2">{% for social in site.socials %}<a href="{{ social.url }}" target="_blank" rel="noopener noreferrer" class="rounded-full border border-white/15 px-4 py-2.5 text-xs text-[#d4d0df] transition hover:border-violet-300/50 hover:bg-white/5">{{ social.name }} ↗</a>{% endfor %}</div>{% endif %}
+              {% if not site.whatsapp_configured %}<p class="mt-8 max-w-sm text-[11px] leading-6 text-amber-100/70">Para receber mensagens, configure seu número real em <code class="text-amber-100">WHATSAPP_NUMBER</code> no app.py ou nas variáveis de ambiente da hospedagem.</p>{% endif %}
+            </div>
+            <form action="{{ url_for('whatsapp_contact') }}" method="post" class="rounded-2xl border border-white/10 bg-black/20 p-5 sm:p-7">
+              <div class="mb-6 flex items-center justify-between"><div><p class="display text-xl font-semibold">Vamos conversar?</p><p class="mt-1 text-xs text-[#888397]">Preencha para preparar a mensagem.</p></div><span class="mono text-[9px] tracking-widest text-[#777286]">FORM / 01</span></div>
+              <label class="mb-2 block text-xs font-semibold text-[#d5d1df]" for="contact-name">Seu nome</label><input class="field mb-5" id="contact-name" name="name" maxlength="80" placeholder="Como posso te chamar?" required>
+              <label class="mb-2 block text-xs font-semibold text-[#d5d1df]" for="contact-message">Sobre o que gostaria de conversar?</label><textarea class="field min-h-36 resize-y" id="contact-message" name="message" maxlength="1200" placeholder="Conte um pouco sobre sua ideia, projeto ou oportunidade..." required></textarea>
+              <button type="submit" class="magnetic mt-5 flex w-full items-center justify-center gap-3 rounded-full accent-bg px-6 py-4 text-sm font-bold text-white shadow-xl shadow-violet-950/25 transition hover:shadow-violet-500/20">{% if site.whatsapp_configured %}Enviar pelo WhatsApp{% else %}Preparar mensagem de contato{% endif %} <span>↗</span></button>
+              <p class="mt-3 text-center text-[10px] leading-5 text-[#777286]">{% if site.whatsapp_configured %}Você será direcionado ao WhatsApp para revisar e enviar a mensagem.{% else %}O destino ainda não foi conectado; a página mostrará como configurar sem inventar um contato.{% endif %}</p>
+            </form>
+          </div>
+        </div>
       </div>
     </section>
   </main>
 
-  <!-- Painel de personalização visual: preferências salvas no navegador. -->
-  <div class="fixed bottom-5 right-5 z-[90] flex flex-col items-end gap-3">
-    <div id="customizer-panel" hidden class="w-[min(19rem,calc(100vw-2.5rem))] rounded-2xl border border-white/10 bg-[#14141F]/95 p-5 opacity-0 shadow-2xl shadow-black/50 backdrop-blur-2xl" role="dialog" aria-label="Personalizar aparência" aria-modal="false">
-      <div class="mb-4 flex items-center justify-between">
-        <div><p class="text-sm font-bold text-white">Personalizar experiência</p><p class="mt-1 text-[11px] text-[#9796AC]">As escolhas ficam salvas neste navegador.</p></div>
-        <button id="customizer-close" class="rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-[#9796AC] hover:text-white" type="button" aria-label="Fechar painel">✕</button>
-      </div>
-      <div class="mb-4">
-        <p class="mb-2 text-xs font-semibold text-[#D5D4E2]">Cor de destaque</p>
-        <div class="flex items-center gap-3">
-          <button class="theme-swatch" type="button" data-theme-preset="violet" aria-label="Tema violeta" aria-pressed="true" style="background:linear-gradient(135deg,#7C5CFC,#C4B5FD)"></button>
-          <button class="theme-swatch" type="button" data-theme-preset="cyan" aria-label="Tema ciano" aria-pressed="false" style="background:linear-gradient(135deg,#0891B2,#67E8F9)"></button>
-          <button class="theme-swatch" type="button" data-theme-preset="emerald" aria-label="Tema esmeralda" aria-pressed="false" style="background:linear-gradient(135deg,#059669,#6EE7B7)"></button>
-          <button class="theme-swatch" type="button" data-theme-preset="rose" aria-label="Tema rosa" aria-pressed="false" style="background:linear-gradient(135deg,#E11D48,#FDA4AF)"></button>
-          <button class="theme-swatch" type="button" data-theme-preset="amber" aria-label="Tema âmbar" aria-pressed="false" style="background:linear-gradient(135deg,#D97706,#FCD34D)"></button>
-        </div>
-        <div class="mt-3 flex items-center justify-between gap-3">
-          <label for="accent-picker" class="text-xs text-[#9796AC]">Cor personalizada</label>
-          <input id="accent-picker" type="color" value="{{ theme_accent }}" aria-label="Escolher cor personalizada" class="h-8 w-12 cursor-pointer rounded-lg border border-white/10 bg-transparent p-0.5">
-        </div>
-      </div>
-      <div class="mb-4">
-        <div class="mb-2 flex items-center justify-between"><label for="motion-intensity" class="text-xs font-semibold text-[#D5D4E2]">Intensidade das animações</label><output id="motion-output" class="text-xs accent-text">82%</output></div>
-        <input id="motion-intensity" class="w-full accent-violet-400" type="range" min="0" max="120" step="1" value="82">
-      </div>
-      <div class="space-y-2.5 border-t border-white/10 pt-3">
-        <label class="flex items-center justify-between gap-3 text-xs text-[#D5D4E2]"><span>Partículas de fundo</span><input id="toggle-particles" type="checkbox" class="h-4 w-4 accent-violet-400" checked></label>
-        <label class="flex items-center justify-between gap-3 text-xs text-[#D5D4E2]"><span>Cursor interativo</span><input id="toggle-cursor" type="checkbox" class="h-4 w-4 accent-violet-400" checked></label>
-        <label class="flex items-center justify-between gap-3 text-xs text-[#D5D4E2]"><span>Movimento dos elementos</span><input id="toggle-motion" type="checkbox" class="h-4 w-4 accent-violet-400" checked></label>
-      </div>
-      <button id="customizer-reset" type="button" class="mt-4 w-full rounded-xl border border-white/10 px-3 py-2.5 text-xs font-semibold text-[#B7B6C8] transition hover:border-white/25 hover:text-white">Restaurar padrão</button>
-    </div>
-    <button id="customizer-toggle" type="button" aria-controls="customizer-panel" aria-expanded="false" class="magnetic accent-gradient accent-glow flex items-center gap-2 rounded-full px-4 py-3 text-xs font-bold text-white shadow-xl">
-      <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.64 5.64l1.42 1.42m9.88 9.88 1.42 1.42m0-12.72-1.42 1.42m-9.88 9.88-1.42 1.42"/><circle cx="12" cy="12" r="4"/></svg>
-      Personalizar
-    </button>
-  </div>
-  <button id="back-to-top" type="button" aria-label="Voltar ao topo" class="fixed bottom-6 left-5 z-[80] flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-[#171722]/90 text-white shadow-xl backdrop-blur-xl transition hover:bg-white/10">
-    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 14 6-6 6 6"/></svg>
-  </button>
-
-  <footer class="border-t border-[#262635] py-6">
-    <div class="mx-auto flex max-w-6xl flex-wrap justify-between gap-3 px-5 text-xs text-[#9796AC] sm:px-6 lg:px-8">
-      <span>© {{ year }} {{ site.name }}. Todos os direitos reservados.</span>
-      <span>{{ site.footer_note }}</span>
-    </div>
+  <footer class="relative z-[1] border-t border-white/10 py-8">
+    <div class="section-wrap flex flex-col justify-between gap-4 text-xs text-[#777286] md:flex-row md:items-center"><div>© {{ year }} {{ site.name }}. Todos os direitos reservados.</div><div class="flex flex-wrap items-center gap-5"><a href="#inicio" class="hover:text-white">Voltar ao topo ↑</a><span>{{ site.footer_note }}</span></div></div>
   </footer>
 
-  <script>
-    (() => {
-      'use strict';
+  <!-- Personalizador vivo: paletas, intensidade e efeitos. -->
+  <div class="fixed bottom-5 right-5 z-[100] flex flex-col items-end gap-3">
+    <div id="custom-panel" class="custom-panel w-[min(20rem,calc(100vw - 2rem))] rounded-2xl border border-white/10 bg-[#13121c]/95 p-5 shadow-2xl shadow-black/50 backdrop-blur-2xl" role="dialog" aria-label="Personalizar experiência" aria-hidden="true">
+      <div class="mb-4 flex items-center justify-between"><div><p class="text-sm font-bold">Personalizar experiência</p><p class="mt-1 text-[10px] text-[#888397]">Preferências salvas neste navegador.</p></div><button id="custom-close" type="button" class="rounded-lg border border-white/10 px-2 py-1 text-xs">✕</button></div>
+      <p class="mb-2 text-xs font-semibold">Paleta de cores</p><div class="flex gap-3"><button class="theme-swatch" data-theme="violet" aria-label="Violeta" aria-pressed="true" style="background:linear-gradient(130deg,#8B5CF6,#C4B5FD)"></button><button class="theme-swatch" data-theme="cyan" aria-label="Ciano" aria-pressed="false" style="background:linear-gradient(130deg,#0891B2,#67E8F9)"></button><button class="theme-swatch" data-theme="emerald" aria-label="Verde" aria-pressed="false" style="background:linear-gradient(130deg,#059669,#6EE7B7)"></button><button class="theme-swatch" data-theme="rose" aria-label="Rosa" aria-pressed="false" style="background:linear-gradient(130deg,#E11D48,#FDA4AF)"></button><button class="theme-swatch" data-theme="amber" aria-label="Âmbar" aria-pressed="false" style="background:linear-gradient(130deg,#D97706,#FCD34D)"></button></div>
+      <div class="mt-4 flex items-center justify-between"><label for="accent-picker" class="text-xs text-[#aaa5b6]">Cor personalizada</label><input type="color" id="accent-picker" value="{{ accent }}" class="h-8 w-12 cursor-pointer rounded border-0 bg-transparent"></div>
+      <div class="mt-4"><div class="mb-2 flex items-center justify-between"><label for="motion-level" class="text-xs">Intensidade do movimento</label><output id="motion-value" class="mono text-xs accent">88%</output></div><input id="motion-level" type="range" min="0" max="120" value="88" class="w-full accent-violet-400"></div>
+      <div class="mt-4 space-y-3 border-t border-white/10 pt-4 text-xs"><label class="flex justify-between"><span>Partículas</span><input id="particles-toggle" type="checkbox" checked></label><label class="flex justify-between"><span>Cursor especial</span><input id="cursor-toggle" type="checkbox" checked></label><label class="flex justify-between"><span>Animações</span><input id="motion-toggle" type="checkbox" checked></label></div>
+      <button id="custom-reset" type="button" class="mt-4 w-full rounded-xl border border-white/10 py-2 text-xs text-[#bbb6ca] transition hover:bg-white/5">Restaurar padrão</button>
+    </div>
+    <button id="custom-toggle" type="button" aria-expanded="false" aria-controls="custom-panel" class="magnetic flex items-center gap-2 rounded-full border border-white/10 bg-[#171522]/90 px-4 py-3 text-xs font-bold text-white shadow-xl backdrop-blur-xl"><span class="accent text-base">✳</span> Personalizar</button>
+  </div>
+  <button id="back-top" type="button" aria-label="Voltar ao topo" class="fixed bottom-6 left-5 z-[80] grid h-11 w-11 translate-y-3 place-items-center rounded-full border border-white/10 bg-[#171522]/90 text-white opacity-0 shadow-xl transition duration-300 hover:bg-white/10" hidden>↑</button>
 
-      const $ = (selector, scope = document) => scope.querySelector(selector);
-      const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const finePointer = window.matchMedia('(pointer: fine)').matches;
-      const touchDevice = !finePointer;
-      const storageKey = 'module-code-portfolio-preferences-v2';
-      const serverDefaults = {
-        particles: {{ effect_particles | tojson }},
-        cursor: {{ effect_cursor | tojson }},
-        motion: {{ effect_motion | tojson }},
-        intensity: {{ effect_intensity | tojson }},
-        theme: 'custom'
-      };
-      const serverTheme = {
-        accent: {{ theme_accent | tojson }},
-        light: {{ theme_accent_light | tojson }},
-        rgb: {{ theme_accent_rgb | tojson }}
-      };
-      const themes = {
-        violet: { accent: '#7C5CFC', light: '#C4B5FD', rgb: '124,92,252' },
-        cyan: { accent: '#0891B2', light: '#67E8F9', rgb: '8,145,178' },
-        emerald: { accent: '#059669', light: '#6EE7B7', rgb: '5,150,105' },
-        rose: { accent: '#E11D48', light: '#FDA4AF', rgb: '225,29,72' },
-        amber: { accent: '#D97706', light: '#FCD34D', rgb: '217,119,6' }
-      };
-      let preferences = { ...serverDefaults };
-      const motionIsActive = () => Boolean(preferences.motion) && Number(preferences.intensity) > 0 && !reducedMotion;
-      try {
-        const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
-        if (saved && typeof saved === 'object') preferences = { ...preferences, ...saved };
-      } catch (error) {
-        console.warn('Não foi possível recuperar as preferências visuais.', error);
+  <script type="module">
+    const $ = (s, root=document) => root.querySelector(s);
+    const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const finePointer = matchMedia('(pointer:fine)').matches;
+    $$('[data-project-gradient]').forEach(element => {
+      const gradient = element.dataset.projectGradient;
+      if (gradient) element.style.setProperty('--project-bg', gradient);
+    });
+    $$('[data-skill-color]').forEach(element => {
+      const color = element.dataset.skillColor;
+      if (color) element.style.backgroundColor = color;
+    });
+    const effectData = document.body.dataset;
+    const defaults = {
+      particles: effectData.effectsParticles !== 'false',
+      cursor: effectData.effectsCursor !== 'false',
+      motion: effectData.effectsMotion !== 'false',
+      intensity: Number(effectData.effectsIntensity || 88),
+      theme: document.documentElement.dataset.themePreset || 'violet'
+    };
+    const palettes = {
+      violet:{accent:'#8B5CF6',light:'#C4B5FD',rgb:'139,92,246'},
+      cyan:{accent:'#0891B2',light:'#67E8F9',rgb:'8,145,178'},
+      emerald:{accent:'#059669',light:'#6EE7B7',rgb:'5,150,105'},
+      rose:{accent:'#E11D48',light:'#FDA4AF',rgb:'225,29,72'},
+      amber:{accent:'#D97706',light:'#FCD34D',rgb:'217,119,6'}
+    };
+    let prefs = {...defaults};
+    try { const saved=JSON.parse(localStorage.getItem('module-code-experience-v3')||'null'); if(saved&&typeof saved==='object') prefs={...prefs,...saved}; } catch(e) { console.info('Preferências locais indisponíveis.'); }
+    if(reduced){prefs.motion=false;prefs.cursor=false;prefs.particles=false;}
+    if(!finePointer)prefs.cursor=false;
+    const save=()=>{try{localStorage.setItem('module-code-experience-v3',JSON.stringify(prefs));}catch(e){}};
+    const root=document.documentElement;
+    function colorFromHex(hex){const h=String(hex).replace('#','');if(!/^[0-9a-f]{6}$/i.test(h))return null;const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);const l=n=>Math.round(n+(255-n)*.48);return {accent:'#'+h,light:`rgb(${l(r)},${l(g)},${l(b)})`,rgb:`${r},${g},${b}`};}
+    function applyTheme(){const t=palettes[prefs.theme]||colorFromHex(prefs.customColor)||palettes.violet;root.style.setProperty('--accent',t.accent);root.style.setProperty('--accent-light',t.light);root.style.setProperty('--accent-rgb',t.rgb);$$('[data-theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.theme===prefs.theme)));if($('#accent-picker'))$('#accent-picker').value=t.accent;}
+    function applyPrefs(){
+      const intensity=Math.max(0,Math.min(120,Number(prefs.intensity)||0));
+      const enabled=Boolean(prefs.motion)&&intensity>0&&!reduced;
+      root.style.setProperty('--motion-scale',String(intensity/100));
+      document.body.classList.toggle('motion-off',!enabled);
+      document.body.classList.toggle('has-cursor',Boolean(prefs.cursor)&&finePointer&&!reduced);
+      // O controle de intensidade também altera a velocidade das timelines GSAP.
+      if(window.gsap&&window.gsap.globalTimeline){
+        window.gsap.globalTimeline.paused(!enabled);
+        if(enabled)window.gsap.globalTimeline.timeScale(Math.max(.15,Math.min(1.2,intensity/100)));
       }
-      if (reducedMotion) preferences.motion = false;
-      if (touchDevice) preferences.cursor = false;
+      $('#motion-level').value=intensity;$('#motion-value').textContent=intensity+'%';
+      $('#particles-toggle').checked=Boolean(prefs.particles);$('#cursor-toggle').checked=Boolean(prefs.cursor);$('#motion-toggle').checked=Boolean(prefs.motion);
+      if(window.__drawParticles)window.__drawParticles();save();
+    }
+    applyTheme();applyPrefs();
 
-      const savePreferences = () => {
-        try { localStorage.setItem(storageKey, JSON.stringify(preferences)); }
-        catch (error) { console.warn('Preferências não puderam ser salvas.', error); }
-      };
+    // Painel do personalizador.
+    const panel=$('#custom-panel'),toggle=$('#custom-toggle');
+    const setPanel=open=>{panel.classList.toggle('is-open',open);panel.setAttribute('aria-hidden',String(!open));toggle.setAttribute('aria-expanded',String(open));};
+    toggle.addEventListener('click',()=>setPanel(!panel.classList.contains('is-open')));$('#custom-close').addEventListener('click',()=>setPanel(false));
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')setPanel(false)});
+    $$('[data-theme]').forEach(b=>b.addEventListener('click',()=>{prefs.theme=b.dataset.theme;delete prefs.customColor;applyTheme();save()}));
+    $('#accent-picker').addEventListener('input',e=>{prefs.theme='custom';prefs.customColor=e.target.value;const custom=colorFromHex(e.target.value);if(custom){root.style.setProperty('--accent',custom.accent);root.style.setProperty('--accent-light',custom.light);root.style.setProperty('--accent-rgb',custom.rgb);$$('[data-theme]').forEach(b=>b.setAttribute('aria-pressed','false'));save()}});
+    $('#motion-level').addEventListener('input',e=>{prefs.intensity=Number(e.target.value);applyPrefs();if(prefs.motion&&prefs.intensity>0&&!window.__portfolioMotionInitialized)location.reload();});
+    $('#particles-toggle').addEventListener('change',e=>{prefs.particles=e.target.checked;applyPrefs()});
+    $('#cursor-toggle').addEventListener('change',e=>{prefs.cursor=e.target.checked;applyPrefs()});
+    $('#motion-toggle').addEventListener('change',e=>{prefs.motion=e.target.checked;applyPrefs();if(prefs.motion&&!window.__portfolioMotionInitialized)location.reload();});
+    $('#custom-reset').addEventListener('click',()=>{prefs={...defaults};applyTheme();applyPrefs()});
 
-      function hexToTheme(hex) {
-        const clean = String(hex || '').replace('#', '');
-        if (!/^[0-9a-f]{6}$/i.test(clean)) return null;
-        const r = parseInt(clean.slice(0, 2), 16), g = parseInt(clean.slice(2, 4), 16), b = parseInt(clean.slice(4, 6), 16);
-        const lighten = (value) => Math.round(value + (255 - value) * .48);
-        return { accent: `#${clean}`, light: `rgb(${lighten(r)},${lighten(g)},${lighten(b)})`, rgb: `${r},${g},${b}` };
-      }
-      function applyTheme(name) {
-        const root = document.documentElement;
-        let theme = themes[name];
-        if (name === 'custom-color') theme = hexToTheme(preferences.customAccent) || serverTheme;
-        if (name === 'custom' || !name) theme = serverTheme;
-        preferences.theme = themes[name] || name === 'custom-color' ? name : 'custom';
-        if (theme) {
-          root.style.setProperty('--accent', theme.accent);
-          root.style.setProperty('--accent-light', theme.light);
-          root.style.setProperty('--accent-rgb', theme.rgb);
-          const picker = $('#accent-picker');
-          if (picker && /^#[0-9a-f]{6}$/i.test(theme.accent)) picker.value = theme.accent;
+    // Menu responsivo com fechamento ao selecionar uma seção.
+    const mobileMenu=$('#mobile-menu'),menuButton=$('#menu-toggle');
+    menuButton.addEventListener('click',()=>{const isHidden=mobileMenu.classList.toggle('hidden');menuButton.setAttribute('aria-expanded',String(!isHidden));$('#menu-icon').textContent=isHidden?'☰':'×';});
+    $$('a[href^="#"]',mobileMenu).forEach(a=>a.addEventListener('click',()=>{mobileMenu.classList.add('hidden');menuButton.setAttribute('aria-expanded','false');$('#menu-icon').textContent='☰';}));
+
+    // Filtros dos projetos: a navegação permanece dentro do próprio Flask.
+    $$('[data-project-filter]').forEach(button=>button.addEventListener('click',()=>{
+      const filter=button.dataset.projectFilter;
+      $$('[data-project-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+      $$('[data-project-card]').forEach(card=>{const show=filter==='all'||card.dataset.category===filter;card.hidden=!show;if(show&&window.gsap&&prefs.motion)window.gsap.fromTo(card,{opacity:0,y:18},{opacity:1,y:0,duration:.45,ease:'power2.out'});});
+    }));
+
+    // Comparador antes/depois controlado pelo teclado, mouse ou toque.
+    const compareRange=$('#compare-range');
+    if(compareRange){const before=$('#comparison-before'),divider=$('#comparison-divider'),output=$('#compare-output');const updateCompare=()=>{const value=Number(compareRange.value);before.style.clipPath=`inset(0 ${100-value}% 0 0)`;divider.style.left=value+'%';output.textContent=value+'%';};compareRange.addEventListener('input',updateCompare);updateCompare();}
+
+    // FAQ acessível: um item aberto por vez.
+    $$('.faq-question').forEach(button=>button.addEventListener('click',()=>{const item=button.closest('.faq-item');const willOpen=!item.classList.contains('is-open');$$('.faq-item').forEach(other=>{other.classList.remove('is-open');$('.faq-question',other).setAttribute('aria-expanded','false')});if(willOpen){item.classList.add('is-open');button.setAttribute('aria-expanded','true')}}));
+
+    // Cursor suave e magnetismo em dispositivos com mouse.
+    const ring=$('#cursor-ring'),dot=$('#cursor-dot');let mouse={x:-100,y:-100},cursor={x:-100,y:-100};
+    if(finePointer&&!reduced){window.addEventListener('pointermove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;dot.style.transform=`translate3d(${mouse.x}px,${mouse.y}px,0)`},{passive:true});const cursorLoop=()=>{cursor.x+=(mouse.x-cursor.x)*.17;cursor.y+=(mouse.y-cursor.y)*.17;ring.style.transform=`translate3d(${cursor.x}px,${cursor.y}px,0)`;requestAnimationFrame(cursorLoop)};cursorLoop();$$('a,button,input,textarea,summary').forEach(el=>{el.addEventListener('pointerenter',()=>ring.classList.add('is-hover'));el.addEventListener('pointerleave',()=>ring.classList.remove('is-hover'))});}
+    // Spotlight e tilt usam variáveis, sem disputar transform com as timelines.
+    $$('[data-spotlight]').forEach(card=>card.addEventListener('pointermove',e=>{const r=card.getBoundingClientRect();card.style.setProperty('--mouse-x',`${e.clientX-r.left}px`);card.style.setProperty('--mouse-y',`${e.clientY-r.top}px`)}));
+    $$('[data-project-card]').forEach(card=>{card.addEventListener('pointermove',e=>{if(!finePointer||!prefs.motion)return;const r=card.getBoundingClientRect();const x=(e.clientX-r.left)/r.width-.5;const y=(e.clientY-r.top)/r.height-.5;card.style.transform=`perspective(900px) rotateX(${-y*4}deg) rotateY(${x*5}deg) translateY(-3px)`;});card.addEventListener('pointerleave',()=>{card.style.transform=''});});
+    $$('.magnetic').forEach(el=>{el.addEventListener('pointermove',e=>{if(!finePointer||!prefs.motion)return;const r=el.getBoundingClientRect();const dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);el.style.transform=`translate(${dx*.09}px,${dy*.12}px)`});el.addEventListener('pointerleave',()=>el.style.transform='')});
+
+    // Canvas ambiente: poucas partículas, com limite por tamanho de tela.
+    const canvas=$('#ambient-canvas'),ctx=canvas.getContext('2d');let particles=[],raf=0,w=0,h=0;const particlePointer={x:-1000,y:-1000};window.addEventListener('pointermove',e=>{particlePointer.x=e.clientX;particlePointer.y=e.clientY;},{passive:true});
+    function resizeCanvas(){const dpr=Math.min(devicePixelRatio||1,1.5);w=innerWidth;h=innerHeight;canvas.width=w*dpr;canvas.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);const count=Math.min(54,Math.max(18,Math.round(w/25)));particles=Array.from({length:count},()=>({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.24,vy:(Math.random()-.5)*.24,r:Math.random()*1.4+.4}));}
+    function particleFrame(){
+      ctx.clearRect(0,0,w,h);
+      if(!prefs.particles||!prefs.motion||Number(prefs.intensity)<=0||reduced){raf=0;return;}
+      const max=125;const particleScale=Math.max(.05,Math.min(1.2,Number(prefs.intensity)/100));
+      const accentRGB=getComputedStyle(root).getPropertyValue('--accent-rgb').trim()||'139,92,246';
+      for(let i=0;i<particles.length;i++){
+        const p=particles[i];
+        p.x+=p.vx*particleScale;p.y+=p.vy*particleScale;
+        const mdx=p.x-particlePointer.x,mdy=p.y-particlePointer.y,md=Math.hypot(mdx,mdy);
+        if(md<115&&md>0){p.x+=(mdx/md)*.45;p.y+=(mdy/md)*.45;}
+        if(p.x<0||p.x>w)p.vx*=-1;
+        if(p.y<0||p.y>h)p.vy*=-1;
+        ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(196,181,253,.55)';ctx.fill();
+        for(let j=i+1;j<particles.length;j++){
+          const q=particles[j],dx=p.x-q.x,dy=p.y-q.y,d=Math.hypot(dx,dy);
+          if(d<max){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.strokeStyle=`rgba(${accentRGB},${(1-d/max)*.105})`;ctx.lineWidth=.7;ctx.stroke();}
         }
-        $$('[data-theme-preset]').forEach((button) => {
-          button.setAttribute('aria-pressed', String(button.dataset.themePreset === preferences.theme));
-        });
-        savePreferences();
+        const pd=Math.hypot(p.x-particlePointer.x,p.y-particlePointer.y);
+        if(pd<145){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(particlePointer.x,particlePointer.y);ctx.strokeStyle=`rgba(${accentRGB},${(1-pd/145)*.2})`;ctx.stroke();}
       }
+      raf=requestAnimationFrame(particleFrame);
+    }
+    window.__drawParticles=()=>{if(!prefs.particles||!prefs.motion||Number(prefs.intensity)<=0||reduced){if(raf)cancelAnimationFrame(raf);raf=0;ctx.clearRect(0,0,w,h)}else if(!raf)particleFrame()};
+    resizeCanvas();window.addEventListener('resize',resizeCanvas,{passive:true});window.__drawParticles();
 
-      function applyPreferences() {
-        const root = document.documentElement;
-        const intensity = Math.max(0, Math.min(120, Number(preferences.intensity) || 0));
-        root.style.setProperty('--motion-scale', String(intensity / 100));
-        document.body.classList.toggle('motion-off', !motionIsActive());
-        document.body.classList.toggle('has-custom-cursor', Boolean(preferences.cursor) && finePointer && motionIsActive());
-        window.__syncPortfolioCursor?.();
-        if (!motionIsActive()) {
-          document.documentElement.classList.remove('reveal-ready');
-          $$('[data-reveal]').forEach((element) => element.classList.add('is-visible'));
-        }
-        $('#motion-intensity').value = String(intensity);
-        $('#motion-output').textContent = `${intensity}%`;
-        $('#toggle-particles').checked = Boolean(preferences.particles);
-        $('#toggle-cursor').checked = Boolean(preferences.cursor) && finePointer;
-        $('#toggle-motion').checked = Boolean(preferences.motion) && !reducedMotion;
-        applyTheme(preferences.theme);
-        resizeCanvas();
-      }
+    // Barra de progresso, topo e navegação ativa.
+    const progress=$('#scroll-progress'),nav=$('#site-nav'),back=$('#back-top');
+    function onScroll(){const max=document.documentElement.scrollHeight-innerHeight;root.style.setProperty('--scroll-progress',`${max>0?scrollY/max*100:0}%`);nav.classList.toggle('is-scrolled',scrollY>25);const visible=scrollY>650;back.hidden=!visible;back.classList.toggle('opacity-0',!visible);back.classList.toggle('translate-y-3',!visible);back.classList.toggle('opacity-100',visible);back.classList.toggle('translate-y-0',visible);}
+    window.addEventListener('scroll',onScroll,{passive:true});onScroll();back.addEventListener('click',()=>window.scrollTo({top:0,behavior:reduced?'auto':'smooth'}));
 
-      // Painel de personalização com persistência local.
-      const customizer = $('#customizer-panel');
-      const customizerToggle = $('#customizer-toggle');
-      const setCustomizerOpen = (open) => {
-        if (!customizer || !customizerToggle) return;
-        customizer.hidden = !open;
-        requestAnimationFrame(() => customizer.classList.toggle('is-open', open));
-        customizerToggle.setAttribute('aria-expanded', String(open));
-      };
-      customizerToggle?.addEventListener('click', () => setCustomizerOpen(customizer.hidden));
-      $('#customizer-close')?.addEventListener('click', () => setCustomizerOpen(false));
-      document.addEventListener('keydown', (event) => { if (event.key === 'Escape') setCustomizerOpen(false); });
-      $$('[data-theme-preset]').forEach((button) => button.addEventListener('click', () => applyTheme(button.dataset.themePreset)));
-      $('#accent-picker')?.addEventListener('input', (event) => { preferences.customAccent = event.target.value; applyTheme('custom-color'); });
-      $('#motion-intensity')?.addEventListener('input', (event) => {
-        preferences.intensity = Number(event.target.value);
-        document.documentElement.style.setProperty('--motion-scale', String(preferences.intensity / 100));
-        document.body.classList.toggle('motion-off', !motionIsActive());
-        if (!motionIsActive()) {
-          document.documentElement.classList.remove('reveal-ready');
-          $$('[data-reveal]').forEach((element) => element.classList.add('is-visible'));
-        }
-        $('#motion-output').textContent = `${preferences.intensity}%`;
-        window.__syncPortfolioCursor?.();
-        resizeCanvas();
-        savePreferences();
-      });
-      $('#toggle-particles')?.addEventListener('change', (event) => { preferences.particles = event.target.checked; savePreferences(); resizeCanvas(); });
-      $('#toggle-cursor')?.addEventListener('change', (event) => { preferences.cursor = event.target.checked && finePointer; applyPreferences(); savePreferences(); });
-      $('#toggle-motion')?.addEventListener('change', (event) => { preferences.motion = event.target.checked && !reducedMotion; applyPreferences(); savePreferences(); });
-      $('#customizer-reset')?.addEventListener('click', () => { preferences = { ...serverDefaults, theme: 'custom' }; applyPreferences(); savePreferences(); });
+    // Transição curta de navegação entre coleção e página de projeto.
+    const routeCurtain=document.createElement('div');routeCurtain.id='route-curtain';routeCurtain.style.cssText='position:fixed;inset:0;z-index:150;background:linear-gradient(120deg,var(--accent),#171322);transform:scaleY(0);transform-origin:bottom;pointer-events:none;';document.body.appendChild(routeCurtain);
+    $$('[data-project-card] a').forEach(link=>link.addEventListener('click',event=>{if(reduced||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||event.button!==0)return;event.preventDefault();const href=link.href;if(window.gsap&&prefs.motion){window.gsap.to(routeCurtain,{scaleY:1,duration:.42,ease:'power3.inOut',transformOrigin:'bottom',onComplete:()=>location.assign(href)});}else{routeCurtain.style.transition='transform .3s ease';routeCurtain.style.transform='scaleY(1)';setTimeout(()=>location.assign(href),300);}}));
 
-      // Indicador de progresso, navbar compacta e botão de voltar ao topo.
-      const progress = $('#scroll-progress');
-      const nav = $('#site-nav');
-      const backToTop = $('#back-to-top');
-      let scrollTicking = false;
-      const updateScrollUI = () => {
-        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-        const percent = maxScroll > 0 ? (window.scrollY / maxScroll) * 100 : 0;
-        document.documentElement.style.setProperty('--scroll-progress', `${percent}%`);
-        nav?.classList.toggle('shadow-lg', window.scrollY > 16);
-        nav?.classList.toggle('border-white/10', window.scrollY > 16);
-        backToTop?.classList.toggle('is-visible', window.scrollY > 500);
-        scrollTicking = false;
-      };
-      window.addEventListener('scroll', () => {
-        if (!scrollTicking) { window.requestAnimationFrame(updateScrollUI); scrollTicking = true; }
-      }, { passive: true });
-      updateScrollUI();
-      backToTop?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' }));
+    // Fallback nativo se GSAP ou os CDNs não responderem.
+    const fallbackReveal=()=>{const io=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.style.opacity='1';entry.target.style.transform='none';io.unobserve(entry.target)}}),{threshold:.12});$$('.reveal').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(24px)';io.observe(el)});};
+    const initMotion=async()=>{
+      if(reduced||!prefs.motion||Number(prefs.intensity)<=0){$$('.reveal').forEach(el=>el.style.opacity='1');window.__portfolioMotionInitialized=Boolean(reduced);return;}
+      if(!window.gsap||!window.ScrollTrigger){fallbackReveal();window.__portfolioMotionInitialized=true;return;}
+      const gsap=window.gsap;const ScrollTrigger=window.ScrollTrigger;gsap.registerPlugin(ScrollTrigger);
+      const factor=Math.max(.15,Math.min(1.2,Number(prefs.intensity)/100||.88));
+      window.__portfolioMotionInitialized=true;gsap.globalTimeline.paused(false);gsap.globalTimeline.timeScale(factor);
+      gsap.fromTo('[data-hero]',{y:34,opacity:0},{y:0,opacity:1,duration:.95*factor,stagger:.13,ease:'power3.out',clearProps:'transform'});
+      gsap.fromTo('.hero-shell h1',{clipPath:'inset(0 0 85% 0)'},{clipPath:'inset(0 0 0% 0)',duration:1.25*factor,ease:'power4.out',delay:.15});
+      gsap.to('.hero-visual',{y:-54,ease:'none',scrollTrigger:{trigger:'#inicio',start:'top top',end:'bottom top',scrub:1.2}});
+      $$('.reveal:not([data-hero]):not(.service-card):not(.principle-card):not(.reason-card)').forEach(el=>gsap.fromTo(el,{y:34,opacity:0},{y:0,opacity:1,duration:.85*factor,ease:'power3.out',scrollTrigger:{trigger:el,start:'top 88%',once:true},clearProps:'transform'}));
+      gsap.to('#hero-window',{y:-13,rotateY:-4,rotateX:2,ease:'none',scrollTrigger:{trigger:'#inicio',start:'top top',end:'bottom top',scrub:1}});
+      gsap.to('.process-orbit',{rotation:360,duration:38,repeat:-1,ease:'none'});
+      const steps=$$('[data-process-step]');
+      if(steps.length){steps.forEach((step,index)=>ScrollTrigger.create({trigger:step,start:'top center',end:'bottom center',onEnter:()=>activateStep(index),onEnterBack:()=>activateStep(index)}));}
+      ScrollTrigger.batch('.service-card,.principle-card,.reason-card',{onEnter:batch=>gsap.fromTo(batch,{y:22,opacity:0},{y:0,opacity:1,stagger:.1,duration:.65,ease:'power2.out',overwrite:true}),start:'top 90%'});
+      $$('[data-counter]').forEach(el=>{const raw=el.textContent.trim();const match=raw.match(/^(\d+)(.*)$/);if(!match)return;const goal=Number(match[1]),suffix=match[2];const counter={n:0};gsap.to(counter,{n:goal,duration:1.5,ease:'power2.out',scrollTrigger:{trigger:el,start:'top 90%',once:true},onUpdate:()=>el.textContent=String(Math.round(counter.n)).padStart(match[1].length,'0')+suffix});});
+      ScrollTrigger.refresh();
+    };
+    function activateStep(index){const steps=$$('[data-process-step]');steps.forEach((el,i)=>el.classList.toggle('is-active',i===index));const step=steps[index];if(!step)return;$('#process-core').textContent=step.dataset.stepNumber;$('#process-current').textContent=step.dataset.stepNumber;$('#process-name').textContent=step.dataset.stepName;const progressLine=$('#process-progress');if(progressLine)progressLine.style.transform=`scaleY(${steps.length>1?index/(steps.length-1):0})`;}
+    // Barras de habilidade animam quando entram na área visível.
+    const skillObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){const fill=entry.target;fill.style.width=`${Math.max(0,Math.min(100,Number(fill.dataset.level)||0))}%`;skillObserver.unobserve(fill);}}),{threshold:.35});
+    $$('.skill-fill').forEach(fill=>skillObserver.observe(fill));
 
-      // Menu mobile com fechamento por link, Escape e mudança de viewport.
-      const menuToggle = $('#menu-toggle');
-      const menu = $('#mobile-menu');
-      const openIcon = $('#menu-open-icon');
-      const closeIcon = $('#menu-close-icon');
-      const setMenuOpen = (isOpen) => {
-        if (!menuToggle || !menu || !openIcon || !closeIcon) return;
-        menuToggle.setAttribute('aria-expanded', String(isOpen));
-        menuToggle.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
-        menu.classList.toggle('hidden', !isOpen);
-        openIcon.classList.toggle('hidden', isOpen);
-        closeIcon.classList.toggle('hidden', !isOpen);
-      };
-      menuToggle?.addEventListener('click', () => setMenuOpen(menuToggle.getAttribute('aria-expanded') !== 'true'));
-      $$('#mobile-menu a').forEach((link) => link.addEventListener('click', () => setMenuOpen(false)));
-      window.addEventListener('resize', () => { if (window.innerWidth >= 768) setMenuOpen(false); });
+    initMotion();
 
-      // Revelação progressiva de blocos e elementos conforme entram na tela.
-      const revealTargets = [
-        ...$$('main header > div:not(.hero-orb)'), ...$$('#sobre [data-reveal], #sobre .grid > div'),
-        ...$$('#habilidades .max-w-2xl, #habilidades [data-reveal], #habilidades .grid > div'),
-        ...$$('#projetos .max-w-2xl, #projetos article'), ...$$('#contato > div'),
-      ];
-      const uniqueRevealTargets = [...new Set(revealTargets)];
-      uniqueRevealTargets.forEach((element, index) => {
-        if (!element.hasAttribute('data-reveal')) element.setAttribute('data-reveal', 'up');
-        element.style.setProperty('--reveal-delay', `${(index % 4) * 85}ms`);
-      });
-      if (motionIsActive() && 'IntersectionObserver' in window) {
-        document.documentElement.classList.add('reveal-ready');
-        const revealObserver = new IntersectionObserver((entries, observer) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); }
-          });
-        }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-        uniqueRevealTargets.forEach((element) => revealObserver.observe(element));
-      } else {
-        uniqueRevealTargets.forEach((element) => element.classList.add('is-visible'));
-      }
+    // Smooth scroll via Lenis integrado ao ScrollTrigger; sem bloquear o scroll nativo se falhar.
+    if(!reduced&&prefs.motion){try{const {default:Lenis}=await import('https://cdn.jsdelivr.net/npm/lenis@1.3.27/+esm');const lenis=new Lenis({duration:1.05,smoothWheel:true,lerp:.085});window.__portfolioLenis=lenis;if(window.gsap&&window.ScrollTrigger){lenis.on('scroll',window.ScrollTrigger.update);window.gsap.ticker.add(time=>lenis.raf(time*1000));window.gsap.ticker.lagSmoothing(0);}else{const loop=t=>{lenis.raf(t);requestAnimationFrame(loop)};requestAnimationFrame(loop);}$$('a[href^="#"]').forEach(link=>link.addEventListener('click',e=>{const target=$(link.getAttribute('href'));if(target){e.preventDefault();lenis.scrollTo(target,{offset:-78,duration:1.15})}}));}catch(error){console.info('Lenis indisponível; usando rolagem nativa.',error);}}
 
-      // Barras de habilidade com preenchimento animado e números crescentes nas métricas.
-      const skillObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          const level = Math.max(0, Math.min(100, Number(entry.target.dataset.skillLevel) || 0));
-          entry.target.style.width = `${level}%`;
-          observer.unobserve(entry.target);
-        });
-      }, { threshold: .35 });
-      $$('[data-skill-level]').forEach((bar) => skillObserver.observe(bar));
+    // Texto de função alternado, sem efeito de digitação agressivo.
+    const roleEl=$('#role-rotator');let roles=[];try{roles=JSON.parse(roleEl.dataset.roles||'[]')}catch(e){}if(roles.length>1&&!reduced){let index=0;setInterval(()=>{if(document.hidden)return;index=(index+1)%roles.length;if(window.gsap){window.gsap.to(roleEl,{opacity:0,y:-5,duration:.2,onComplete:()=>{roleEl.textContent=roles[index];window.gsap.fromTo(roleEl,{opacity:0,y:7},{opacity:1,y:0,duration:.35})}})}else{roleEl.textContent=roles[index];}},3600);}
 
-      const counterObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          const element = entry.target;
-          const original = element.textContent.trim();
-          const match = original.match(/^([\d.,]+)(.*)$/);
-          if (!match || !motionIsActive()) { observer.unobserve(element); return; }
-          const target = Number(match[1].replace(',', '.'));
-          if (!Number.isFinite(target)) { observer.unobserve(element); return; }
-          const suffix = match[2];
-          const duration = 1250 * (Math.max(.4, Number(preferences.intensity) / 82));
-          const start = performance.now();
-          const step = (now) => {
-            const progress = Math.min(1, (now - start) / duration);
-            const eased = 1 - Math.pow(1 - progress, 4);
-            const value = target * eased;
-            element.textContent = `${Number.isInteger(target) ? Math.round(value) : value.toFixed(1)}${suffix}`;
-            if (progress < 1) requestAnimationFrame(step); else element.textContent = original;
-          };
-          requestAnimationFrame(step);
-          observer.unobserve(element);
-        });
-      }, { threshold: .6 });
-      $$('[data-counter]').forEach((counter) => counterObserver.observe(counter));
-
-      // Alternância de frases no título principal (typewriter).
-      const typed = $('#typed-headline');
-      const phrases = {{ site.roles | tojson }};
-      if (typed && Array.isArray(phrases) && phrases.length && motionIsActive()) {
-        let phraseIndex = 0;
-        let charIndex = typed.dataset.default.length;
-        let deleting = false;
-        const typeLoop = () => {
-          const current = phrases[phraseIndex] || typed.dataset.default;
-          if (!deleting) {
-            charIndex = Math.min(current.length, charIndex + 1);
-            typed.textContent = current.slice(0, charIndex);
-            if (charIndex === current.length) { deleting = true; window.setTimeout(typeLoop, 1850); return; }
-          } else {
-            charIndex = Math.max(0, charIndex - 1);
-            typed.textContent = current.slice(0, charIndex);
-            if (charIndex === 0) { deleting = false; phraseIndex = (phraseIndex + 1) % phrases.length; }
-          }
-          if (!motionIsActive()) { typed.textContent = typed.dataset.default; return; }
-          window.setTimeout(typeLoop, deleting ? 28 : 48);
-        };
-        // Mantém o texto completo até a primeira pausa e inicia sem salto.
-        window.setTimeout(() => { phraseIndex = 0; deleting = true; typeLoop(); }, 2400);
-      }
-
-      // Efeito de inclinação 3D e foco luminoso nos cards de projeto.
-      if (finePointer) {
-        $$('[data-tilt]').forEach((card) => {
-          card.addEventListener('pointermove', (event) => {
-            if (!motionIsActive()) return;
-            const rect = card.getBoundingClientRect();
-            const x = (event.clientX - rect.left) / rect.width;
-            const y = (event.clientY - rect.top) / rect.height;
-            const tiltStrength = Math.max(0, Number(preferences.intensity) || 0) / 82;
-            const rotateY = (x - .5) * 9 * tiltStrength;
-            const rotateX = (.5 - y) * 9 * tiltStrength;
-            card.style.setProperty('--tilt-x', `${rotateX.toFixed(2)}deg`);
-            card.style.setProperty('--tilt-y', `${rotateY.toFixed(2)}deg`);
-            card.style.setProperty('--lift', '-5px');
-            card.style.setProperty('--pointer-x', `${x * 100}%`);
-            card.style.setProperty('--pointer-y', `${y * 100}%`);
-          });
-          card.addEventListener('pointerleave', () => {
-            card.style.setProperty('--tilt-x', '0deg'); card.style.setProperty('--tilt-y', '0deg'); card.style.setProperty('--lift', '0px');
-          });
-        });
-      }
-
-      // Parallax sutil na composição visual do hero, limitado a poucos pixels.
-      const parallaxItem = $('[data-parallax]');
-      if (finePointer && parallaxItem) {
-        let parallaxTick = false;
-        window.addEventListener('pointermove', (event) => {
-          if (!motionIsActive() || parallaxTick) return;
-          parallaxTick = true;
-          requestAnimationFrame(() => {
-            const x = (event.clientX / Math.max(1, window.innerWidth) - .5) * 10;
-            const y = (event.clientY / Math.max(1, window.innerHeight) - .5) * 10;
-            parallaxItem.style.setProperty('--parallax-x', `${x.toFixed(1)}px`);
-            parallaxItem.style.setProperty('--parallax-y', `${y.toFixed(1)}px`);
-            parallaxTick = false;
-          });
-        }, { passive: true });
-      }
-
-      // Botões magnéticos e pequenos feedbacks de clique.
-      if (finePointer) {
-        $$('.magnetic').forEach((element) => {
-          element.addEventListener('pointermove', (event) => {
-            if (!motionIsActive()) return;
-            const rect = element.getBoundingClientRect();
-            const magnetStrength = .12 * (Math.max(0, Number(preferences.intensity) || 0) / 82);
-            const dx = (event.clientX - rect.left - rect.width / 2) * magnetStrength;
-            const dy = (event.clientY - rect.top - rect.height / 2) * magnetStrength;
-            element.style.transform = `translate3d(${dx}px,${dy}px,0)`;
-          });
-          element.addEventListener('pointerleave', () => { element.style.transform = ''; });
-        });
-      }
-      $$('a.magnetic, button.magnetic').forEach((element) => {
-        element.addEventListener('click', (event) => {
-          if (reducedMotion || !preferences.motion) return;
-          const rect = element.getBoundingClientRect();
-          const ripple = document.createElement('span');
-          ripple.className = 'ripple';
-          ripple.style.left = `${event.clientX ? event.clientX - rect.left : rect.width / 2}px`;
-          ripple.style.top = `${event.clientY ? event.clientY - rect.top : rect.height / 2}px`;
-          element.style.position = element.style.position || 'relative';
-          element.style.overflow = 'hidden';
-          element.appendChild(ripple);
-          window.setTimeout(() => ripple.remove(), 700);
-        });
-      });
-
-      // Cursor com rastro suave, apenas em dispositivos com mouse/trackpad.
-      const cursorRing = $('#cursor-ring');
-      const cursorDot = $('#cursor-dot');
-      let mouseX = -100, mouseY = -100, ringX = -100, ringY = -100, cursorFrame = 0;
-      if (finePointer && !reducedMotion && cursorRing && cursorDot) {
-        window.addEventListener('pointermove', (event) => { mouseX = event.clientX; mouseY = event.clientY; }, { passive: true });
-        const animateCursor = () => {
-          if (!preferences.cursor) { cursorFrame = 0; return; }
-          ringX += (mouseX - ringX) * .16; ringY += (mouseY - ringY) * .16;
-          cursorRing.style.transform = `translate3d(${ringX}px,${ringY}px,0)`;
-          cursorDot.style.transform = `translate3d(${mouseX}px,${mouseY}px,0)`;
-          cursorFrame = requestAnimationFrame(animateCursor);
-        };
-        const syncCursor = () => {
-          const enabled = Boolean(preferences.cursor) && finePointer && motionIsActive();
-          document.body.classList.toggle('has-custom-cursor', enabled);
-          if (enabled && !cursorFrame) cursorFrame = requestAnimationFrame(animateCursor);
-          if (!enabled && cursorFrame) { cancelAnimationFrame(cursorFrame); cursorFrame = 0; }
-          if (!enabled) {
-            cursorRing.style.transform = 'translate3d(-100px,-100px,0)';
-            cursorDot.style.transform = 'translate3d(-100px,-100px,0)';
-            cursorRing.classList.remove('is-hover');
-          }
-        };
-        // applyPreferences chama a sincronização também quando o visitante altera a opção.
-        window.__syncPortfolioCursor = syncCursor;
-        $$('a, button, input, [data-tilt]').forEach((element) => {
-          element.addEventListener('pointerenter', () => cursorRing.classList.add('is-hover'));
-          element.addEventListener('pointerleave', () => cursorRing.classList.remove('is-hover'));
-        });
-      }
-
-      // Partículas conectadas em canvas, com limite de densidade para preservar desempenho.
-      const canvas = $('#ambient-canvas');
-      const context = canvas?.getContext('2d', { alpha: true });
-      let particles = [];
-      let canvasWidth = 0, canvasHeight = 0, canvasFrame = 0;
-      const pointer = { x: -1000, y: -1000 };
-      window.addEventListener('pointermove', (event) => { pointer.x = event.clientX; pointer.y = event.clientY; }, { passive: true });
-      function resizeCanvas() {
-        if (!canvas || !context) return;
-        canvasWidth = window.innerWidth; canvasHeight = window.innerHeight;
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-        canvas.width = Math.floor(canvasWidth * dpr); canvas.height = Math.floor(canvasHeight * dpr);
-        canvas.style.width = `${canvasWidth}px`; canvas.style.height = `${canvasHeight}px`;
-        context.setTransform(dpr, 0, 0, dpr, 0, 0);
-        const count = preferences.particles && motionIsActive() ? Math.min(54, Math.max(18, Math.floor(canvasWidth * canvasHeight / 26000))) : 0;
-        particles = Array.from({ length: count }, () => ({
-          x: Math.random() * canvasWidth, y: Math.random() * canvasHeight,
-          vx: (Math.random() - .5) * .26 * (Number(preferences.intensity) / 82), vy: (Math.random() - .5) * .26 * (Number(preferences.intensity) / 82),
-          radius: Math.random() * 1.4 + .55
-        }));
-        if (count && !canvasFrame) canvasFrame = requestAnimationFrame(drawParticles);
-      }
-      function drawParticles() {
-        if (!context || !canvas) { canvasFrame = 0; return; }
-        context.clearRect(0, 0, canvasWidth, canvasHeight);
-        if (!preferences.particles || !motionIsActive()) { canvasFrame = 0; return; }
-        const rgb = getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim() || '124,92,252';
-        for (let i = 0; i < particles.length; i++) {
-          const p = particles[i];
-          const dx = p.x - pointer.x, dy = p.y - pointer.y;
-          const distance = Math.hypot(dx, dy);
-          if (distance < 120 && distance > 0) { p.vx += (dx / distance) * .002; p.vy += (dy / distance) * .002; }
-          p.x += p.vx; p.y += p.vy; p.vx *= .999; p.vy *= .999;
-          if (p.x < -10) p.x = canvasWidth + 10; if (p.x > canvasWidth + 10) p.x = -10;
-          if (p.y < -10) p.y = canvasHeight + 10; if (p.y > canvasHeight + 10) p.y = -10;
-          context.beginPath(); context.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-          context.fillStyle = `rgba(${rgb},.48)`; context.fill();
-          for (let j = i + 1; j < particles.length; j++) {
-            const other = particles[j]; const distanceBetween = Math.hypot(p.x - other.x, p.y - other.y);
-            if (distanceBetween < 118) {
-              context.beginPath(); context.moveTo(p.x, p.y); context.lineTo(other.x, other.y);
-              context.strokeStyle = `rgba(${rgb},${(1 - distanceBetween / 118) * .12})`;
-              context.lineWidth = .7; context.stroke();
-            }
-          }
-        }
-        canvasFrame = requestAnimationFrame(drawParticles);
-      }
-      window.addEventListener('resize', resizeCanvas, { passive: true });
-
-      // Links da navegação acompanham a seção atualmente visível.
-      const navLinks = $$('[data-nav-link]');
-      const observedSections = navLinks.map((link) => $(link.getAttribute('href'))).filter(Boolean);
-      if ('IntersectionObserver' in window) {
-        const sectionObserver = new IntersectionObserver((entries) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) return;
-            navLinks.forEach((link) => {
-              const active = link.getAttribute('href') === `#${entry.target.id}`;
-              link.classList.toggle('is-active', active);
-              if (active) link.setAttribute('aria-current', 'location'); else link.removeAttribute('aria-current');
-            });
-          });
-        }, { rootMargin: '-28% 0px -62% 0px', threshold: 0 });
-        observedSections.forEach((section) => sectionObserver.observe(section));
-      }
-
-      applyPreferences();
-      savePreferences();
-    })();
+    // Navegação ativa por seção.
+    if('IntersectionObserver'in window){const navLinks=$$('[data-nav]');const sections=['inicio','frentes','projetos','arquitetura','metodo','sobre','contato'].map(id=>$('#'+id)).filter(Boolean);const navIO=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting)navLinks.forEach(link=>link.classList.toggle('is-active',link.getAttribute('href')==='#'+entry.target.id));}),{rootMargin:'-35% 0px -55% 0px'});sections.forEach(section=>navIO.observe(section));}
   </script>
 </body>
 </html>

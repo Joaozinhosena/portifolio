@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="pt-BR" data-accent="{{ site.theme.get('accent', '#8B5CF6') }}" data-light="{{ site.theme.get('accent_light', '#C4B5FD') }}" data-rgb="{{ site.theme.get('accent_rgb', '139,92,246') }}" data-page-bg="{{ site.theme.get('background', '#09090F') }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Conectar contato · {{ site.name }}</title><script>
+(() => {
+  const root = document.documentElement;
+  const vars = {'--a':root.dataset.accent,'--l':root.dataset.light,'--rgb':root.dataset.rgb,'--bg':root.dataset.pageBg};
+  Object.entries(vars).forEach(([name,value]) => { if(value) root.style.setProperty(name,value); });
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script><style>:root{color-scheme:dark;--a:#8B5CF6;--l:#C4B5FD;--rgb:139,92,246;--bg:#09090F}body{margin:0;min-height:100vh;background:radial-gradient(circle at 80% 10%,rgba(var(--rgb),.15),transparent 35%),var(--bg);color:#f4f1f8;font-family:Inter,system-ui,sans-serif}.accent{color:var(--l)}.btn{display:inline-flex;align-items:center;gap:9px;border-radius:99px;padding:12px 18px;background:linear-gradient(110deg,var(--a),var(--l));font-size:13px;font-weight:700;color:white}</style></head>
+<body class="grid min-h-screen place-items-center px-5 py-10"><main class="w-full max-w-2xl rounded-3xl border border-white/10 bg-[#14141D]/95 p-7 shadow-2xl sm:p-10">
+  <span class="inline-flex rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1.5 text-[10px] font-bold tracking-widest text-amber-200">CANAL AINDA NÃO CONECTADO</span>
+  <h1 class="mt-6 text-3xl font-bold">A mensagem está pronta. Falta conectar o WhatsApp.</h1>
+  <p class="mt-4 text-sm leading-7 text-zinc-400">O formulário está funcionando e recebeu sua mensagem, mas o número de destino ainda não foi configurado. Não vou redirecionar para um contato inventado.</p>
+  <section class="mt-7 rounded-2xl border border-white/10 bg-black/20 p-5"><p class="mono text-[10px] font-bold tracking-widest accent">1 / EDITE O app.py</p><pre class="mt-3 overflow-x-auto rounded-xl bg-black/30 p-4 text-sm text-emerald-200"><code>"whatsapp_number": "55DDDNUMERO",</code></pre><p class="mt-3 text-xs leading-6 text-zinc-500">Use o código do Brasil + DDD + número, somente dígitos. Exemplo de formato: 5581999999999. Substitua pelo seu número real.</p></section>
+  <section class="mt-5 rounded-2xl border border-white/10 p-5"><div class="flex items-center justify-between gap-3"><p class="mono text-[10px] font-bold tracking-widest accent">2 / MENSAGEM PREPARADA</p><button id="copy" class="rounded-full border border-white/15 px-3 py-2 text-xs hover:bg-white/5" type="button">Copiar texto</button></div><p id="message" class="mt-4 whitespace-pre-line text-sm leading-7 text-zinc-300">{{ message }}</p><p id="status" class="mt-2 text-xs text-emerald-300" aria-live="polite"></p></section>
+  <a class="btn mt-7" href="{{ url_for('home') }}#contato">Voltar ao portfólio <span>↗</span></a>
+</main><script>document.querySelector('#copy').addEventListener('click',async()=>{const text=document.querySelector('#message').textContent;try{await navigator.clipboard.writeText(text);document.querySelector('#status').textContent='Mensagem copiada.'}catch(e){document.querySelector('#status').textContent='Não foi possível copiar automaticamente. Selecione o texto e copie.'}})</script></body></html>

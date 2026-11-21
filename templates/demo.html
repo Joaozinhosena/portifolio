@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="pt-BR" class="scroll-smooth" data-accent="{{ site.theme.accent }}" data-accent-light="{{ site.theme.accent_light }}" data-accent-rgb="{{ site.theme.accent_rgb }}" data-page-bg="{{ site.theme.background }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="{{ site.theme.background }}">
+  <meta name="description" content="Demonstração interativa: {{ project.name }}.">
+  <title>Demo: {{ project.name }} | {{ site.name }}</title>
+  <link rel="icon" href="{{ url_for('favicon') }}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const vars = {
+        '--accent': root.dataset.accent,
+        '--accent-light': root.dataset.accentLight,
+        '--accent-rgb': root.dataset.accentRgb,
+        '--page-bg': root.dataset.pageBg
+      };
+      Object.entries(vars).forEach(([name, value]) => {
+        if (value) root.style.setProperty(name, value);
+      });
+    })();
+  </script>
+  <style>
+    :root { color-scheme: dark; --accent: #8B5CF6; --accent-light: #C4B5FD; --accent-rgb: 139,92,246; --page-bg:#09090F; }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; background:var(--page-bg); color:#F3F3F8; font-family:Inter,sans-serif; }
+    body::before { content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.15; background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px); background-size:54px 54px; }
+    header,main,footer { position:relative; z-index:1; }
+    .accent { color:var(--accent-light); }
+    .accent-bg { background:linear-gradient(110deg,var(--accent),var(--accent-light)); }
+    .panel { border:1px solid #2B2B3D; background:#15151F; border-radius:1.25rem; }
+    .demo-btn { border:1px solid #35354B; border-radius:.8rem; padding:.65rem .9rem; font-size:.8rem; font-weight:650; transition:.2s ease; }
+    .demo-btn:hover { border-color:var(--accent-light); transform:translateY(-1px); }
+    .product-card { border:1px solid #303044; background:#171722; border-radius:1rem; overflow:hidden; transition:transform .2s,border-color .2s; }
+    .product-card:hover { transform:translateY(-4px); border-color:var(--accent); }
+    .field { width:100%; border:1px solid #36364A; background:#101019; border-radius:.75rem; padding:.75rem .9rem; color:white; outline:none; }
+    .field:focus { border-color:var(--accent-light); box-shadow:0 0 0 3px rgba(var(--accent-rgb),.13); }
+    .task-row.done .task-title { color:#77768A; text-decoration:line-through; }
+    .range-active { background:rgba(var(--accent-rgb),.2); border-color:var(--accent) !important; color:#fff; }
+    a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible { outline:2px solid var(--accent-light); outline-offset:3px; }
+  </style>
+</head>
+<body data-project-slug="{{ project.slug }}" data-products="{{ products|default([], true)|tojson|forceescape }}">
+  <header class="border-b border-white/10 bg-[#0A0A12]/90 backdrop-blur-xl">
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-7">
+      <a href="{{ url_for('home') }}" class="flex items-center gap-3 font-bold" aria-label="Voltar ao portfólio">
+        <span class="grid h-9 w-9 place-items-center rounded-xl accent-bg">&lt;/&gt;</span>
+        <span style="font-family:'Space Grotesk',sans-serif">{{ site.brand_first }} <span class="accent">{{ site.brand_last }}</span></span>
+      </a>
+      <a href="{{ url_for('project_detail', project_slug=project.slug) }}" class="demo-btn">← Detalhes</a>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-5 py-8 sm:px-7 sm:py-12">
+    <div class="mb-8 flex flex-wrap items-center gap-3">
+      <span class="rounded-full border border-violet-300/30 bg-violet-400/10 px-3 py-1 text-[11px] font-bold tracking-widest accent">AMBIENTE DE DEMONSTRAÇÃO</span>
+      <span class="text-xs text-[#85849A]">{{ project.name }}</span>
+    </div>
+
+    {% if project.demo_kind == 'store' %}
+    <section>
+      <div class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div>
+          <p class="mb-2 text-xs font-bold tracking-[.2em] accent">LOJA CONCEITO</p>
+          <h1 class="text-3xl font-bold sm:text-4xl" style="font-family:'Space Grotesk',sans-serif">Tech<span class="accent">Store</span></h1>
+          <p class="mt-3 max-w-xl text-sm leading-7 text-[#A5A4B7]">Uma demonstração de catálogo e carrinho. Adicione produtos, altere quantidades e teste o resumo do pedido.</p>
+        </div>
+        <div class="rounded-xl border border-amber-300/20 bg-amber-300/5 px-4 py-3 text-xs leading-5 text-amber-100/80">Demonstração: não há cobrança, estoque ou pagamento real.</div>
+      </div>
+      <div class="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div>
+          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-lg font-bold">Produtos em destaque</h2>
+            <label class="sr-only" for="product-search">Buscar produto</label>
+            <input id="product-search" class="field max-w-xs text-sm" type="search" placeholder="Buscar produto...">
+          </div>
+          <div id="product-grid" class="grid gap-4 sm:grid-cols-2">
+            {% for product in products %}
+            <article class="product-card p-4" data-product-card data-search="{{ (product.name ~ ' ' ~ product.category)|lower }}">
+              <div class="mb-4 grid h-36 place-items-center rounded-xl bg-gradient-to-br from-violet-500/20 to-cyan-300/10 text-5xl">{{ product.emoji }}</div>
+              <div class="text-[10px] font-bold uppercase tracking-widest accent">{{ product.category }}</div>
+              <h3 class="mt-1 font-bold">{{ product.name }}</h3>
+              <p class="mt-1 min-h-10 text-xs leading-5 text-[#9291A7]">{{ product.description }}</p>
+              <div class="mt-4 flex items-center justify-between gap-3">
+                <strong class="text-lg">R$ {{ '%.2f'|format(product.price)|replace('.', ',') }}</strong>
+                <button class="add-product accent-bg rounded-full px-4 py-2 text-xs font-bold text-white" type="button" data-id="{{ product.id }}">Adicionar +</button>
+              </div>
+            </article>
+            {% endfor %}
+          </div>
+          <p id="empty-search" class="hidden panel mt-4 p-5 text-center text-sm text-[#9A99AD]">Nenhum produto corresponde à busca.</p>
+        </div>
+        <aside class="panel h-fit p-5 lg:sticky lg:top-6">
+          <div class="mb-4 flex items-center justify-between"><h2 class="text-lg font-bold">Seu carrinho</h2><span id="cart-count" class="rounded-full accent-bg px-2.5 py-1 text-xs font-bold">0</span></div>
+          <div id="cart-items" class="space-y-3"><p class="text-sm text-[#85849A]">Seu carrinho está vazio.</p></div>
+          <div class="mt-5 border-t border-white/10 pt-4">
+            <div class="flex items-center justify-between text-sm"><span class="text-[#9291A7]">Subtotal</span><strong id="cart-total">R$ 0,00</strong></div>
+            <button id="checkout-demo" class="mt-4 w-full rounded-xl accent-bg px-4 py-3 text-sm font-bold text-white transition hover:brightness-110" type="button">Testar finalização</button>
+            <button id="clear-cart" class="mt-2 w-full rounded-xl border border-white/10 px-4 py-2.5 text-xs text-[#A5A4B7] hover:bg-white/5" type="button">Esvaziar carrinho</button>
+            <p class="mt-3 text-[10px] leading-4 text-[#77768A]">O carrinho é salvo somente neste navegador usando LocalStorage.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    {% elif project.demo_kind == 'tasks' %}
+    <section class="mx-auto max-w-4xl">
+      <div class="mb-8">
+        <p class="mb-2 text-xs font-bold tracking-[.2em] accent">PRODUTIVIDADE</p>
+        <h1 class="text-3xl font-bold sm:text-4xl" style="font-family:'Space Grotesk',sans-serif">Task<span class="accent">Flow</span></h1>
+        <p class="mt-3 max-w-xl text-sm leading-7 text-[#A5A4B7]">Crie tarefas, marque como concluídas, filtre a lista e exclua itens. Os dados permanecem salvos neste navegador.</p>
+      </div>
+      <div class="panel p-5 sm:p-7">
+        <form id="task-form" class="flex flex-col gap-3 sm:flex-row">
+          <label class="sr-only" for="task-input">Nova tarefa</label>
+          <input id="task-input" class="field flex-1" maxlength="100" required placeholder="Ex.: Finalizar página inicial">
+          <button type="submit" class="accent-bg rounded-xl px-5 py-3 text-sm font-bold text-white hover:brightness-110">Adicionar tarefa</button>
+        </form>
+        <div class="my-6 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+          <div class="flex flex-wrap gap-2" role="group" aria-label="Filtrar tarefas">
+            <button class="task-filter demo-btn range-active" type="button" data-filter="all">Todas</button>
+            <button class="task-filter demo-btn" type="button" data-filter="active">Pendentes</button>
+            <button class="task-filter demo-btn" type="button" data-filter="done">Concluídas</button>
+          </div>
+          <button id="clear-done" type="button" class="text-xs font-semibold text-rose-300 hover:text-rose-200">Limpar concluídas</button>
+        </div>
+        <div class="mb-4 flex flex-wrap justify-between gap-2 text-xs text-[#9291A7]"><span id="task-summary">0 tarefas</span><span>Salvamento automático ativo</span></div>
+        <ul id="task-list" class="space-y-2"></ul>
+        <p id="task-empty" class="py-8 text-center text-sm text-[#85849A]">Nenhuma tarefa por aqui. Adicione a primeira acima.</p>
+      </div>
+    </section>
+
+    {% else %}
+    <section>
+      <div class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div>
+          <p class="mb-2 text-xs font-bold tracking-[.2em] accent">PAINEL DE DADOS FICTÍCIOS</p>
+          <h1 class="text-3xl font-bold sm:text-4xl" style="font-family:'Space Grotesk',sans-serif">Market<span class="accent">Pulse</span></h1>
+          <p class="mt-3 max-w-xl text-sm leading-7 text-[#A5A4B7]">Dashboard demonstrativo com dados simulados. Os filtros alteram o gráfico e os indicadores; não são cotações em tempo real.</p>
+        </div>
+        <div class="flex flex-wrap gap-2" role="group" aria-label="Intervalo do gráfico">
+          <button class="chart-range demo-btn range-active" type="button" data-range="1D">1D</button>
+          <button class="chart-range demo-btn" type="button" data-range="1S">1S</button>
+          <button class="chart-range demo-btn" type="button" data-range="1M">1M</button>
+          <button class="chart-range demo-btn" type="button" data-range="1A">1A</button>
+        </div>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-3">
+        <article class="panel p-5"><p class="text-xs text-[#9291A7]">Índice demonstrativo</p><p id="market-value" class="mt-2 text-2xl font-bold">R$ 128.450,00</p><p id="market-change" class="mt-1 text-xs text-emerald-300">+2,34% no período</p></article>
+        <article class="panel p-5"><p class="text-xs text-[#9291A7]">Volume simulado</p><p id="market-volume" class="mt-2 text-2xl font-bold">R$ 8,42 mi</p><p class="mt-1 text-xs text-[#85849A]">Amostra fictícia</p></article>
+        <article class="panel p-5"><p class="text-xs text-[#9291A7]">Ativos monitorados</p><p class="mt-2 text-2xl font-bold">12</p><p class="mt-1 text-xs text-[#85849A]">Indicador de demonstração</p></article>
+      </div>
+      <div class="panel mt-5 p-4 sm:p-6">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h2 class="font-bold">Evolução do índice</h2><p id="chart-period-label" class="mt-1 text-xs text-[#85849A]">Últimas 24 horas — dados fictícios</p></div><span class="rounded-lg bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-300">● Simulado</span></div>
+        <svg id="market-chart" viewBox="0 0 900 300" class="w-full overflow-visible" role="img" aria-label="Gráfico demonstrativo do índice ao longo do tempo">
+          <defs><linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A78BFA" stop-opacity=".35"/><stop offset="1" stop-color="#A78BFA" stop-opacity="0"/></linearGradient></defs>
+          <g stroke="rgba(255,255,255,.09)" stroke-dasharray="5 8"><path d="M30 50H870M30 110H870M30 170H870M30 230H870"/></g>
+          <path id="chart-area" d="" fill="url(#chart-fill)"/><path id="chart-line" d="" fill="none" stroke="#B9A5FF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="mt-2 flex justify-between text-[10px] text-[#77768A]"><span id="chart-start">00:00</span><span>Dados de demonstração</span><span id="chart-end">Agora</span></div>
+      </div>
+    </section>
+    {% endif %}
+
+    <div class="mt-10 flex flex-wrap gap-3 border-t border-white/10 pt-7">
+      <a href="{{ url_for('project_detail', project_slug=project.slug) }}" class="demo-btn">Ver detalhes do projeto</a>
+      <a href="{{ url_for('home') }}#projetos" class="demo-btn">Voltar ao portfólio</a>
+      <a href="{{ url_for('whatsapp_contact', message='Olá! Testei a demonstração ' ~ project.name ~ ' e gostaria de conversar.') }}" class="demo-btn">Falar com {{ site.name }}</a>
+    </div>
+    <p class="mt-6 text-[11px] leading-5 text-[#6F6E82]">Esta página é um protótipo interativo para demonstração de interface. Não representa um serviço comercial publicado, não processa pagamentos e não utiliza dados financeiros reais.</p>
+  </main>
+
+  <footer class="mt-12 border-t border-white/10 py-6 text-center text-xs text-[#6F6E82]">© {{ year }} {{ site.name }} · Demonstração interativa</footer>
+
+  {% if project.demo_kind == 'store' %}
+  <script>
+    (() => {
+      const products = JSON.parse(document.body.dataset.products || '[]');
+      const money = value => new Intl.NumberFormat('pt-BR', {style:'currency',currency:'BRL'}).format(value);
+      const storageKey = 'modulecode-cart-v1';
+      let cart = {};
+      try { cart = JSON.parse(localStorage.getItem(storageKey) || '{}') || {}; } catch (_) { cart = {}; }
+      const cartItems = document.getElementById('cart-items');
+      const totalNode = document.getElementById('cart-total');
+      const countNode = document.getElementById('cart-count');
+      const catalog = Object.fromEntries(products.map(item => [item.id, item]));
+      function save() { localStorage.setItem(storageKey, JSON.stringify(cart)); }
+      function renderCart() {
+        const entries = Object.entries(cart).filter(([id, qty]) => catalog[id] && qty > 0);
+        const count = entries.reduce((sum, [,qty]) => sum + qty, 0);
+        const total = entries.reduce((sum, [id,qty]) => sum + catalog[id].price * qty, 0);
+        countNode.textContent = count;
+        totalNode.textContent = money(total);
+        cartItems.innerHTML = '';
+        if (!entries.length) { cartItems.innerHTML = '<p class="text-sm text-[#85849A]">Seu carrinho está vazio.</p>'; return; }
+        entries.forEach(([id,qty]) => {
+          const product = catalog[id];
+          const row = document.createElement('div');
+          row.className = 'flex items-center justify-between gap-3 rounded-xl bg-white/[.035] p-3';
+          row.innerHTML = `<div class="min-w-0"><p class="truncate text-xs font-semibold"></p><p class="mt-1 text-[11px] text-[#9291A7]"></p></div><div class="flex items-center gap-2"><button class="qty-btn demo-btn px-2 py-1" data-id="${id}" data-delta="-1" aria-label="Diminuir quantidade">−</button><span class="w-4 text-center text-xs">${qty}</span><button class="qty-btn demo-btn px-2 py-1" data-id="${id}" data-delta="1" aria-label="Aumentar quantidade">+</button></div>`;
+          row.querySelector('p').textContent = product.name;
+          row.querySelectorAll('p')[1].textContent = money(product.price * qty);
+          cartItems.appendChild(row);
+        });
+        cartItems.querySelectorAll('.qty-btn').forEach(button => button.addEventListener('click', () => {
+          const id = button.dataset.id; cart[id] = (cart[id] || 0) + Number(button.dataset.delta);
+          if (cart[id] <= 0) delete cart[id]; save(); renderCart();
+        }));
+      }
+      document.querySelectorAll('.add-product').forEach(button => button.addEventListener('click', () => {
+        const id = button.dataset.id; cart[id] = (cart[id] || 0) + 1; save(); renderCart();
+        const original = button.textContent; button.textContent = 'Adicionado ✓'; setTimeout(() => button.textContent = original, 850);
+      }));
+      document.getElementById('clear-cart').addEventListener('click', () => { cart = {}; save(); renderCart(); });
+      document.getElementById('product-search').addEventListener('input', event => {
+        const term = event.target.value.trim().toLocaleLowerCase('pt-BR'); let visible = 0;
+        document.querySelectorAll('[data-product-card]').forEach(card => {
+          const match = card.dataset.search.includes(term); card.classList.toggle('hidden', !match); if (match) visible++;
+        });
+        document.getElementById('empty-search').classList.toggle('hidden', visible > 0);
+      });
+      document.getElementById('checkout-demo').addEventListener('click', () => {
+        const lines = Object.entries(cart).filter(([id,qty]) => catalog[id] && qty > 0).map(([id,qty]) => `${catalog[id].name} x${qty}`);
+        if (!lines.length) { alert('Adicione pelo menos um produto antes de testar a finalização.'); return; }
+        alert('Checkout demonstrativo concluído!\n\n' + lines.join('\n') + '\n\nNenhuma compra ou cobrança foi realizada.');
+      });
+      renderCart();
+    })();
+  </script>
+  {% elif project.demo_kind == 'tasks' %}
+  <script>
+    (() => {
+      const key = `modulecode-tasks-${document.body.dataset.projectSlug || 'default'}`;
+      let tasks = []; let filter = 'all';
+      try { tasks = JSON.parse(localStorage.getItem(key) || '[]'); if (!Array.isArray(tasks)) tasks = []; } catch (_) { tasks = []; }
+      const list = document.getElementById('task-list'); const empty = document.getElementById('task-empty');
+      const summary = document.getElementById('task-summary');
+      const persist = () => localStorage.setItem(key, JSON.stringify(tasks));
+      function render() {
+        list.innerHTML = '';
+        const filtered = tasks.filter(t => filter === 'all' || (filter === 'active' && !t.done) || (filter === 'done' && t.done));
+        filtered.forEach(task => {
+          const row = document.createElement('li'); row.className = `task-row flex items-center gap-3 rounded-xl border border-white/5 bg-white/[.035] p-3 ${task.done ? 'done' : ''}`;
+          const check = document.createElement('input'); check.type = 'checkbox'; check.checked = task.done; check.className = 'h-4 w-4 accent-violet-400'; check.setAttribute('aria-label','Marcar tarefa como concluída');
+          check.addEventListener('change', () => { task.done = check.checked; persist(); render(); });
+          const title = document.createElement('span'); title.className = 'task-title min-w-0 flex-1 break-words text-sm'; title.textContent = task.title;
+          const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'rounded-lg px-3 py-2 text-xs text-rose-300 hover:bg-rose-400/10'; remove.textContent = 'Excluir'; remove.addEventListener('click', () => { tasks = tasks.filter(item => item.id !== task.id); persist(); render(); });
+          row.append(check,title,remove); list.appendChild(row);
+        });
+        const pending = tasks.filter(t => !t.done).length; summary.textContent = `${tasks.length} tarefa(s) · ${pending} pendente(s)`;
+        empty.classList.toggle('hidden', filtered.length > 0);
+        empty.textContent = tasks.length ? 'Nenhuma tarefa neste filtro.' : 'Nenhuma tarefa por aqui. Adicione a primeira acima.';
+      }
+      document.getElementById('task-form').addEventListener('submit', event => {
+        event.preventDefault(); const input = document.getElementById('task-input'); const title = input.value.trim(); if (!title) return;
+        tasks.unshift({id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, title, done:false}); input.value = ''; persist(); render(); input.focus();
+      });
+      document.querySelectorAll('.task-filter').forEach(button => button.addEventListener('click', () => {
+        filter = button.dataset.filter; document.querySelectorAll('.task-filter').forEach(item => item.classList.toggle('range-active', item === button)); render();
+      }));
+      document.getElementById('clear-done').addEventListener('click', () => { tasks = tasks.filter(t => !t.done); persist(); render(); });
+      render();
+    })();
+  </script>
+  {% else %}
+  <script>
+    (() => {
+      const ranges = {
+        '1D': {values:[42,45,44,48,47,50,49,54,53,58,56,61,63,60,66,70], value:'R$ 128.450,00', change:'+2,34% no período', volume:'R$ 8,42 mi', label:'Últimas 24 horas', start:'00:00',end:'Agora'},
+        '1S': {values:[35,37,36,40,39,43,45,44,48,50,49,54,57,55,61,64], value:'R$ 128.450,00', change:'+5,81% no período', volume:'R$ 42,8 mi', label:'Últimos 7 dias', start:'Seg',end:'Dom'},
+        '1M': {values:[58,55,57,53,51,54,49,52,56,58,55,61,60,64,67,70], value:'R$ 128.450,00', change:'+8,12% no período', volume:'R$ 186 mi', label:'Últimos 30 dias', start:'Dia 1',end:'Hoje'},
+        '1A': {values:[25,28,26,30,34,32,38,37,43,46,45,52,55,57,62,70], value:'R$ 128.450,00', change:'+21,60% no período', volume:'R$ 2,14 bi', label:'Últimos 12 meses', start:'Jan',end:'Dez'}
+      };
+      function draw(range) {
+        const data = ranges[range]; const points = data.values.map((value,index) => [30 + index * (840 / (data.values.length - 1)), 245 - value * 2.75]);
+        const line = points.map((point,index) => `${index ? 'L' : 'M'} ${point[0].toFixed(1)} ${point[1].toFixed(1)}`).join(' ');
+        document.getElementById('chart-line').setAttribute('d', line);
+        document.getElementById('chart-area').setAttribute('d', `${line} L 870 270 L 30 270 Z`);
+        document.getElementById('market-value').textContent = data.value;
+        document.getElementById('market-change').textContent = data.change;
+        document.getElementById('market-volume').textContent = data.volume;
+        document.getElementById('chart-period-label').textContent = `${data.label} — dados fictícios`;
+        document.getElementById('chart-start').textContent = data.start;
+        document.getElementById('chart-end').textContent = data.end;
+      }
+      document.querySelectorAll('.chart-range').forEach(button => button.addEventListener('click', () => {
+        document.querySelectorAll('.chart-range').forEach(item => item.classList.toggle('range-active', item === button)); draw(button.dataset.range);
+      }));
+      draw('1D');
+    })();
+  </script>
+  {% endif %}
+</body>
+</html>
