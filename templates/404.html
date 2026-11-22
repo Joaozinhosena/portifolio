@@ -1,1 +1,18 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Página não encontrada</title><script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script><style>body{background:#09090f;color:#f4f1f8;font-family:Inter,system-ui,sans-serif}</style></head><body class="grid min-h-screen place-items-center px-6"><main class="max-w-lg text-center"><p class="text-sm font-semibold tracking-widest text-violet-300">ERRO 404</p><h1 class="mt-4 text-4xl font-bold">Essa página não existe.</h1><p class="mt-4 text-sm leading-7 text-zinc-400">O endereço pode ter mudado ou o projeto não está cadastrado.</p><a class="mt-8 inline-flex rounded-full bg-violet-500 px-6 py-3 text-sm font-bold" href="{{ url_for('home') }}">Voltar ao portfólio</a></main></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Página não encontrada · {{ site.name }}</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>body{background:#09090f;color:#f4f1f8;font-family:Inter,system-ui,sans-serif}</style>
+</head>
+<body class="grid min-h-screen place-items-center px-6">
+  <main class="max-w-lg text-center">
+    <p class="text-sm font-semibold tracking-widest text-violet-300">ERRO 404</p>
+    <h1 class="mt-4 text-4xl font-bold">Essa página não existe.</h1>
+    <p class="mt-4 text-sm leading-7 text-zinc-400">O endereço pode ter mudado ou o arquivo não está disponível.</p>
+    <a class="mt-8 inline-flex rounded-full bg-violet-500 px-6 py-3 text-sm font-bold text-white" href="{{ url_for('home') }}">Voltar ao portfólio</a>
+  </main>
+</body>
+</html>

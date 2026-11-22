@@ -1,0 +1,308 @@
+{
+  "brand_first": "MODULE",
+  "brand_last": "CODE",
+  "name": "Module Code",
+  "role_badge": "DESENVOLVEDOR WEB · CRIANDO NA PRÁTICA",
+  "headline": "Código com propósito. Experiências que conectam.",
+  "roles": [
+    "Desenvolvimento web sob medida.",
+    "Interfaces rápidas e intuitivas.",
+    "Ideias transformadas em produtos digitais."
+  ],
+  "intro": "Somos especializados em back end e front end construindo uma landpage robusta. Aqui você pode conhecer nossas aplicações e testar modelos prontos. Nos comprometemos em entregar uma experiência fácil e intuitiva para os clientes.",
+  "photo_url": "",
+  "resume_url": "",
+  "theme": {
+    "preset": "violet",
+    "accent": "#8B5CF6",
+    "accent_light": "#C4B5FD",
+    "accent_rgb": "139,92,246",
+    "background": "#09090F",
+    "surface": "#14141D"
+  },
+  "effects": {
+    "particles": true,
+    "cursor": true,
+    "motion": true,
+    "intensity": 88
+  },
+  "about_title": "Tecnologia é ferramenta. A experiência é o que importa.",
+  "about_text": "Gosto de entender o problema antes de escrever a primeira linha de código. Busco criar soluções objetivas, com interfaces claras, estrutura organizada e espaço para evoluir. Esta página reúne projetos com endereço público para que você possa conhecer o resultado diretamente no navegador.",
+  "about_link_text": "Explorar projetos",
+  "stats": [
+    {
+      "value": "01",
+      "label": "sites com acesso público",
+      "icon": "code"
+    },
+    {
+      "value": "100%",
+      "label": "atenção ao responsivo",
+      "icon": "trophy"
+    },
+    {
+      "value": "∞",
+      "label": "possibilidades para criar",
+      "icon": "sparkles"
+    }
+  ],
+  "services": [
+    {
+      "number": "01",
+      "eyebrow": "PRESENÇA DIGITAL",
+      "title": "Web & interfaces",
+      "text": "Páginas e aplicações web com hierarquia visual, navegação intuitiva e atenção à velocidade.",
+      "tags": [
+        "Flask",
+        "HTML",
+        "Tailwind",
+        "JavaScript"
+      ],
+      "symbol": "↗"
+    },
+    {
+      "number": "02",
+      "eyebrow": "PRODUTO DIGITAL",
+      "title": "Experiências interativas",
+      "text": "Componentes que respondem ao usuário, microinterações e animações que ajudam a contar a história.",
+      "tags": [
+        "UX",
+        "GSAP",
+        "Motion",
+        "Acessibilidade"
+      ],
+      "symbol": "✳"
+    },
+    {
+      "number": "03",
+      "eyebrow": "LÓGICA & INTEGRAÇÃO",
+      "title": "Automação & backend",
+      "text": "Rotas, formulários e integrações que conectam a interface a funcionalidades úteis.",
+      "tags": [
+        "Python",
+        "Flask",
+        "APIs",
+        "Integrações"
+      ],
+      "symbol": "⌘"
+    },
+    {
+      "number": "04",
+      "eyebrow": "EXPERIMENTAÇÃO",
+      "title": "Tecnologia aplicada",
+      "text": "Exploração de ideias envolvendo programação, eletrônica e soluções conectadas.",
+      "tags": [
+        "Prototipagem",
+        "Lógica",
+        "IoT",
+        "Aprendizado"
+      ],
+      "symbol": "⌁"
+    }
+  ],
+  "projects": [],
+  "process": [
+    {
+      "number": "01",
+      "name": "Entender",
+      "title": "Primeiro, a pergunta certa.",
+      "text": "Entender o contexto, o objetivo e quem vai utilizar a solução. Um bom resultado começa com um problema bem definido.",
+      "meta": "CONTEXTO & DIREÇÃO"
+    },
+    {
+      "number": "02",
+      "name": "Desenhar",
+      "title": "Dar forma à experiência.",
+      "text": "Organizar conteúdo, jornadas e hierarquia da interface antes de aprofundar a implementação.",
+      "meta": "ESTRUTURA & INTERFACE"
+    },
+    {
+      "number": "03",
+      "name": "Construir",
+      "title": "Código que faz sentido.",
+      "text": "Desenvolver as funcionalidades em partes claras, testar os fluxos e manter o projeto fácil de evoluir.",
+      "meta": "DESENVOLVIMENTO"
+    },
+    {
+      "number": "04",
+      "name": "Refinar",
+      "title": "Atenção ao detalhe final.",
+      "text": "Revisar responsividade, acessibilidade, desempenho e comportamento real de cada interação.",
+      "meta": "TESTES & ENTREGA"
+    }
+  ],
+  "principles": [
+    {
+      "number": "01",
+      "title": "Intenção",
+      "text": "Cada elemento precisa ter uma função. Menos ruído, mais clareza."
+    },
+    {
+      "number": "02",
+      "title": "Consistência",
+      "text": "Uma experiência coerente em telas, componentes e interações."
+    },
+    {
+      "number": "03",
+      "title": "Evolução",
+      "text": "Estrutura pensada para receber melhorias sem perder organização."
+    },
+    {
+      "number": "04",
+      "title": "Acessibilidade",
+      "text": "Movimento, contraste e navegação devem respeitar quem está usando."
+    }
+  ],
+  "faqs": [
+    {
+      "question": "Como posso conhecer os projetos?",
+      "answer": "Na seção de projetos, clique em qualquer card para abrir diretamente o site ou a aplicação publicada. Não é necessário acessar o GitHub nem entender de programação."
+    },
+    {
+      "question": "Como posso solicitar um orçamento ou conversar sobre uma ideia?",
+      "answer": "Use o formulário de contato. Com o número configurado, ele abrirá uma conversa no WhatsApp com a mensagem preenchida. Sem número configurado, o site informa como conectar o canal em vez de abrir um link inexistente."
+    },
+    {
+      "question": "O site funciona em celular?",
+      "answer": "Sim. A estrutura é responsiva, o menu se adapta a telas menores e efeitos que dependem do mouse são desativados em dispositivos de toque."
+    },
+    {
+      "question": "Os projetos funcionam no celular?",
+      "answer": "Os links levam às versões públicas dos projetos. A experiência em cada dispositivo depende da versão publicada de cada site."
+    }
+  ],
+  "contact_title": "Tem uma ideia para tirar do papel?",
+  "contact_text": "Conte um pouco sobre o que você está imaginando. Vamos começar entendendo o desafio e encontrar um caminho para construir algo útil.",
+  "email": "ModuleCodes@gmail.com",
+  "whatsapp_number": "558173200835",
+  "phone_display": "",
+  "phone_link": "",
+  "socials": [
+    {
+      "label": "GH",
+      "name": "GitHub",
+      "url": "https://github.com/Joaozinhosena"
+    },
+    {
+      "label": "IN",
+      "name": "LinkedIn",
+      "url": ""
+    },
+    {
+      "label": "IG",
+      "name": "Instagram",
+      "url": ""
+    }
+  ],
+  "footer_note": "Feito com código, intenção e atenção aos detalhes.",
+  "toolkit": [
+    {
+      "id": "html5",
+      "name": "HTML5",
+      "short": "H5",
+      "category": "FRONT-END / ESTRUTURA",
+      "tagline": "A estrutura semântica de toda experiência web.",
+      "description": "Organiza o conteúdo em elementos com significado: cabeçalhos, seções, navegação, formulários e ações. Uma estrutura bem definida torna a interface mais clara, acessível e previsível em diferentes navegadores.",
+      "project_role": "É a fundação das páginas. No Module Code, os templates HTML definem a hierarquia do conteúdo e os pontos de interação que depois recebem estilo e comportamento.",
+      "context": "Templates Jinja renderizados pelo Flask.",
+      "icon_url": "https://cdn.simpleicons.org/html5/E34F26",
+      "color": "#E34F26"
+    },
+    {
+      "id": "tailwindcss",
+      "name": "Tailwind CSS",
+      "short": "TW",
+      "category": "FRONT-END / DESIGN SYSTEM",
+      "tagline": "Consistência visual e responsividade com velocidade.",
+      "description": "Oferece classes utilitárias para compor layouts, espaçamentos, tipografia, cores, estados e breakpoints diretamente na marcação. Ajuda a manter padrões visuais consistentes sem depender de uma folha CSS separada.",
+      "project_role": "Constrói a camada visual responsiva do portfólio: grids, navegação, cartões, formulários e estados para desktop e dispositivos móveis. Nesta versão, o Tailwind é carregado pelo CDN do navegador.",
+      "context": "Interface responsiva nos templates HTML.",
+      "icon_url": "https://cdn.simpleicons.org/tailwindcss/06B6D4",
+      "color": "#06B6D4"
+    },
+    {
+      "id": "javascript",
+      "name": "JavaScript",
+      "short": "JS",
+      "category": "FRONT-END / INTERAÇÃO",
+      "tagline": "Transforma a interface em uma experiência interativa.",
+      "description": "Controla estados e eventos no navegador, atualiza conteúdo sem recarregar a página e conecta controles visuais às ações do visitante. É a camada que responde a cliques, teclado, toque e movimento do ponteiro.",
+      "project_role": "Dá vida ao menu mobile, filtros de projetos, painel de personalização, efeitos de ponteiro, formulários e interações do explorador de tecnologias.",
+      "context": "Scripts de interação dentro dos templates.",
+      "icon_url": "https://cdn.simpleicons.org/javascript/F7DF1E",
+      "color": "#F7DF1E"
+    },
+    {
+      "id": "python",
+      "name": "Python",
+      "short": "PY",
+      "category": "BACK-END / LÓGICA",
+      "tagline": "A lógica que conecta dados, regras e serviços.",
+      "description": "É uma linguagem versátil para implementar regras de negócio, tratar dados, integrar APIs e automatizar tarefas. No servidor, recebe as solicitações, prepara as informações e decide qual resposta entregar.",
+      "project_role": "Executa a aplicação Flask, carrega as configurações, prepara os dados dos projetos, valida entradas e faz a integração com a API pública do GitHub.",
+      "context": "Código do servidor e serviços Python.",
+      "icon_url": "https://cdn.simpleicons.org/python/3776AB",
+      "color": "#3776AB"
+    },
+    {
+      "id": "flask",
+      "name": "Flask",
+      "short": "FL",
+      "category": "BACK-END / WEB FRAMEWORK",
+      "tagline": "Rotas simples para entregar páginas e funcionalidades.",
+      "description": "É um microframework web para Python. Permite declarar rotas, receber formulários, chamar serviços e renderizar templates, mantendo o fluxo entre navegador e servidor organizado.",
+      "project_role": "Conecta os endereços do site às funções Python e renderiza os templates Jinja. Também encaminha o formulário de contato ao fluxo de WhatsApp configurado.",
+      "context": "Rotas, respostas HTTP e templates Jinja.",
+      "icon_url": "https://cdn.simpleicons.org/flask/FFFFFF",
+      "color": "#FFFFFF"
+    },
+    {
+      "id": "gsap",
+      "name": "GSAP",
+      "short": "GS",
+      "category": "MOTION / ANIMAÇÃO",
+      "tagline": "Movimento preciso, fluido e sincronizado.",
+      "description": "É uma biblioteca de animação para controlar propriedades, sequências, timelines e transições com precisão. Permite coordenar vários elementos sem criar animações desconectadas.",
+      "project_role": "Coordena entradas dos elementos, transições, microinterações e animações progressivas. Em conjunto com ScrollTrigger, pode sincronizar movimentos com a rolagem da página.",
+      "context": "Timelines GSAP e plugin ScrollTrigger.",
+      "icon_url": "https://cdn.simpleicons.org/gsap/88CE02",
+      "color": "#88CE02"
+    },
+    {
+      "id": "git",
+      "name": "Git",
+      "short": "GT",
+      "category": "ENGENHARIA / VERSIONAMENTO",
+      "tagline": "Histórico confiável para evoluir o código.",
+      "description": "Registra alterações ao longo do desenvolvimento, permite comparar versões, criar ramificações e recuperar estados anteriores. É a base do versionamento e do trabalho colaborativo.",
+      "project_role": "Mantém o histórico das mudanças do portfólio e permite organizar correções e melhorias antes de publicar novas versões.",
+      "context": "Versionamento do código-fonte.",
+      "icon_url": "https://cdn.simpleicons.org/git/F05032",
+      "color": "#F05032"
+    },
+    {
+      "id": "vercel",
+      "name": "Vercel",
+      "short": "VX",
+      "category": "INFRAESTRUTURA / DEPLOY",
+      "tagline": "Publicação e entrega da experiência na web.",
+      "description": "É uma plataforma de hospedagem e deploy para projetos web. Integra repositórios, executa builds e disponibiliza aplicações por meio de domínios e infraestrutura gerenciada.",
+      "project_role": "É o destino de hospedagem planejado para disponibilizar a aplicação Flask e os projetos web por endereços públicos, com deploy conectado ao repositório.",
+      "context": "Hospedagem e publicação dos projetos configurados.",
+      "icon_url": "https://cdn.simpleicons.org/vercel/FFFFFF",
+      "color": "#FFFFFF"
+    },
+    {
+      "id": "sqlite",
+      "name": "SQLite",
+      "short": "DB",
+      "category": "DADOS / PERSISTÊNCIA",
+      "tagline": "Armazenamento relacional leve para aplicações.",
+      "description": "É um banco de dados relacional embutido que armazena informações em um arquivo e oferece consultas SQL. É útil para aplicações pequenas e médias que precisam persistir dados sem administrar um servidor de banco separado.",
+      "project_role": "É uma opção do repertório para projetos que precisam guardar clientes, tarefas ou registros. O portfólio atual não usa SQLite para armazenar seus dados; a integração GitHub permanece em cache.",
+      "context": "Disponível para aplicações com dados persistentes; não está conectado a esta página.",
+      "icon_url": "https://cdn.simpleicons.org/sqlite/003B57",
+      "color": "#003B57"
+    }
+  ]
+}
